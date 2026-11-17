@@ -1,0 +1,9 @@
+# zizmor policy (run in the CI lint job: zizmor --offline .github/workflows/)
+
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        # Actions are referenced by tag (e.g. @v7), not commit hash, on purpose:
+        # the workflows change often during active development.
+        "*": ref-pin
