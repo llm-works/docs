@@ -108,3 +108,92 @@ def test_unknown_keys_are_rejected() -> None:
     """A misspelt key fails instead of being silently ignored."""
     with pytest.raises(ValidationError):
         load_build_config(build_dict(packages=[package_dict(doc=["INTRO.md"])]))
+
+
+TREE = [
+    {"User guide": "README.md"},
+    "start.md",
+    {"Guides": [{"Config": ["guides/a.md", {"B": "guides/b.md"}]}, "guides/c.md"]},
+]
+
+
+def test_docs_tree_lists_its_files_in_nav_order() -> None:
+    """Sections and titles are arrangement; the files are the allowlist, in tree order."""
+    pkg = load_build_config(build_dict(packages=[package_dict(docs=TREE)])).packages[0]
+    assert pkg.files == ("README.md", "start.md", "guides/a.md", "guides/b.md", "guides/c.md")
+
+
+@pytest.mark.parametrize(
+    "entry",
+    [{"A": "a.md", "B": "b.md"}, {"Empty": []}, {"Number": 3}],
+)
+def test_docs_entry_shapes_are_checked(entry: object) -> None:
+    """An entry is a path, {title: path} or {section: [entries]}, nothing else."""
+    with pytest.raises(ValidationError, match="docs entry"):
+        load_build_config(build_dict(packages=[package_dict(docs=[entry])]))
+
+
+def test_docs_paths_inside_sections_are_checked() -> None:
+    """Nested paths get the same checks as top-level ones."""
+    with pytest.raises(ValidationError, match="docs path"):
+        load_build_config(build_dict(packages=[package_dict(docs=[{"S": ["../x.md"]}])]))
+    with pytest.raises(ValidationError, match="twice"):
+        load_build_config(build_dict(packages=[package_dict(docs=["a.md", {"S": ["a.md"]}])]))
+
+
+def test_docs_root_is_a_plain_relative_path() -> None:
+    """The docs directory is inside the checkout."""
+    pkg = load_build_config(build_dict(packages=[package_dict(docs_root="pkg/docs")])).packages[0]
+    assert pkg.docs_root == "pkg/docs"
+    with pytest.raises(ValidationError, match="docs_root"):
+        load_build_config(build_dict(packages=[package_dict(docs_root="../elsewhere")]))
+
+
+def test_rename_maps_a_listed_file() -> None:
+    """A renamed file lands under its new name; others keep theirs."""
+    pkg = load_build_config(
+        build_dict(packages=[package_dict(docs=TREE, rename={"README.md": "guide.md"})])
+    ).packages[0]
+    assert pkg.site_path("README.md") == "guide.md"
+    assert pkg.site_path("start.md") == "start.md"
+
+
+@pytest.mark.parametrize(
+    ("rename", "match"),
+    [
+        ({"absent.md": "x.md"}, "not in docs"),
+        ({"README.md": "start.md"}, "collides"),
+        ({"README.md": "../x.md"}, "rename target"),
+    ],
+)
+def test_rename_is_checked(rename: dict[str, str], match: str) -> None:
+    """Renames name a listed file and a free, plain path."""
+    with pytest.raises(ValidationError, match=match):
+        load_build_config(build_dict(packages=[package_dict(docs=TREE, rename=rename)]))
+
+
+def test_reference_is_checked() -> None:
+    """The reference names an importable package in a plain checkout path."""
+    ref = {"package": "llm_saia", "source": "src"}
+    pkg = load_build_config(build_dict(packages=[package_dict(reference=ref)])).packages[0]
+    assert pkg.reference is not None and pkg.reference.source == "src"
+    with pytest.raises(ValidationError, match="import name"):
+        load_build_config(build_dict(packages=[package_dict(reference={"package": "llm-saia"})]))
+    with pytest.raises(ValidationError, match="reference source"):
+        bad = {"package": "x", "source": "/abs"}
+        load_build_config(build_dict(packages=[package_dict(reference=bad)]))
+
+
+def test_brand_urls_are_checked() -> None:
+    """The stylesheets come from http(s), or file:// for local previews."""
+    brand = build_dict()["brand"] | {"nav_css_url": "ftp://example.com/nav.css"}
+    with pytest.raises(ValidationError, match="brand stylesheet URL"):
+        load_build_config(build_dict(brand=brand))
+
+
+@pytest.mark.parametrize("docs_dir", ["pages", ".", "/"])
+def test_docs_dir_cannot_hold_the_pages(docs_dir: str) -> None:
+    """stage rebuilds docs_dir, so it cannot be the pages or contain them."""
+    site = build_dict()["site"] | {"docs_dir": docs_dir}
+    with pytest.raises(ValidationError, match="docs_dir"):
+        load_build_config(build_dict(site=site))

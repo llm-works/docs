@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: MIT
 # SPDX-FileCopyrightText: Copyright 2026 The llm-works-docs Authors
 
-"""Fetch the inputs of a build: each package at its release tag, and the main site's nav."""
+"""Fetch the inputs of a build: each package at its release tag, and the main site's nav and
+brand stylesheets."""
 
 import shutil
 import subprocess
@@ -76,19 +77,24 @@ def _git(*args: str) -> str:
 
 def fetch_nav(lg: Logger, nav: NavConfig) -> str:
     """Download the main site's nav partial and return its markup."""
-    request = urllib.request.Request(nav.url, headers={"User-Agent": USER_AGENT})
+    return fetch_text(lg, nav.url, nav.timeout_s)
+
+
+def fetch_text(lg: Logger, url: str, timeout_s: float) -> str:
+    """Download a text file from the main site (or a file:// URL) and return it."""
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     try:
-        with urllib.request.urlopen(request, timeout=nav.timeout_s) as response:  # noqa: S310
+        with urllib.request.urlopen(request, timeout=timeout_s) as response:  # noqa: S310
             # HTTP responses carry a status; file:// responses (local previews) have None.
             status = response.status
             body: bytes = response.read()
     except OSError as e:
-        raise FetchError(f"nav download from {nav.url} failed: {e}") from e
+        raise FetchError(f"download from {url} failed: {e}") from e
     if status is not None and status != 200:
-        raise FetchError(f"nav download from {nav.url} returned HTTP {status}")
+        raise FetchError(f"download from {url} returned HTTP {status}")
     try:
-        html = body.decode("utf-8")
+        text = body.decode("utf-8")
     except UnicodeDecodeError as e:
-        raise FetchError(f"nav from {nav.url} is not valid UTF-8: {e}") from e
-    lg.info("nav fetched", extra={"url": nav.url, "bytes": len(body)})
-    return html
+        raise FetchError(f"{url} is not valid UTF-8: {e}") from e
+    lg.info("fetched", extra={"url": url, "bytes": len(body)})
+    return text

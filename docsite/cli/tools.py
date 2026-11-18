@@ -3,6 +3,7 @@
 
 """One CLI tool per build step."""
 
+import tomllib
 from typing import Any, ClassVar
 
 from appinfra.app.tools import Tool, ToolConfig
@@ -11,10 +12,23 @@ from pydantic import ValidationError
 from ..build import Build
 from ..config import load_build_config
 from ..fetch import FetchError
+from ..navtree import NavTreeError
+from ..reference import ReferenceSourceError
+from ..siteconf import SiteConfigError
 from ..sitenav import NavMarkupError
 from ..stage import StageError
 
-_STEP_ERRORS = (ValidationError, FetchError, StageError, NavMarkupError, OSError)
+_STEP_ERRORS = (
+    ValidationError,
+    FetchError,
+    StageError,
+    NavMarkupError,
+    NavTreeError,
+    SiteConfigError,
+    ReferenceSourceError,
+    tomllib.TOMLDecodeError,
+    OSError,
+)
 
 
 class _StepTool(Tool):
@@ -54,10 +68,10 @@ class FetchTool(_StepTool):
 
 
 class StageTool(_StepTool):
-    """Copy allowlisted docs into the site."""
+    """Assemble the docs directory from the site's pages and the packages' docs."""
 
     name = "stage"
-    help_text = "Copy each package's allowlisted docs into the site's docs directory"
+    help_text = "Rebuild the docs directory from the site pages and each package's docs"
 
     def _step(self, build: Build) -> None:
         """Run Build.stage."""
@@ -75,11 +89,22 @@ class NavTool(_StepTool):
         build.nav()
 
 
+class SiteConfigTool(_StepTool):
+    """Render the Zensical config with each package's docs tree in the nav."""
+
+    name = "config"
+    help_text = "Render the Zensical config from the base config and the packages"
+
+    def _step(self, build: Build) -> None:
+        """Run Build.site_config."""
+        build.site_config()
+
+
 class BuildTool(_StepTool):
     """Run every step."""
 
     name = "build"
-    help_text = "Fetch, stage and render the header"
+    help_text = "Fetch, stage, and render the header and the Zensical config"
 
     def _step(self, build: Build) -> None:
         """Run Build.all."""
