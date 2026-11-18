@@ -1,0 +1,38 @@
+# docsite build configuration, loaded by `python -m docsite` (appinfra config spec).
+
+logging:
+  level: info
+  handlers:
+    console:
+      type: console
+      enabled: true
+      format: text
+      stream: stderr
+      colors: true
+
+site:
+  # Package checkouts and the downloaded nav partial
+  build_dir: .build/src
+  # Zensical docs_dir; each package's guides are staged under <docs_dir>/<name>/guides
+  docs_dir: docs
+
+# The header is the main site's nav, fetched live at every build so a nav change on
+# www.llm-works.ai needs only a docs rebuild, not a change here.
+nav:
+  url: https://www.llm-works.ai/partials/nav.html
+  # Root-relative links in the nav are rewritten to this origin
+  site_origin: https://www.llm-works.ai
+  output: overrides/partials/site-nav.html
+  timeout_s: 10
+
+# Each package is fetched at a pinned release tag. `docs` is an allowlist of paths under
+# the package's docs/ directory: only these files are published, so internal notes in a
+# package's docs/ never reach the site. No wildcards: a new file must be listed to ship.
+#
+#   - name: appinfra
+#     repo: https://github.com/llm-works/appinfra.git
+#     tag: vX.Y.Z
+#     docs:
+#       - index.md
+#       - guides/getting-started.md
+packages: []
