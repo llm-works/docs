@@ -191,9 +191,22 @@ def test_brand_urls_are_checked() -> None:
         load_build_config(build_dict(brand=brand))
 
 
-@pytest.mark.parametrize("docs_dir", ["pages", ".", "/"])
-def test_docs_dir_cannot_hold_the_pages(docs_dir: str) -> None:
-    """stage rebuilds docs_dir, so it cannot be the pages or contain them."""
+@pytest.mark.parametrize(
+    "docs_dir",
+    [
+        # the pages: equal, containing, inside
+        "pages",
+        ".",
+        "/",
+        "pages/docs",
+        # the checkouts (build_dir is .build/src): equal, containing, inside
+        ".build/src",
+        ".build",
+        ".build/src/docs",
+    ],
+)
+def test_docs_dir_is_apart_from_the_inputs(docs_dir: str) -> None:
+    """stage rebuilds docs_dir, so it cannot overlap the pages or the checkouts either way."""
     site = build_dict()["site"] | {"docs_dir": docs_dir}
     with pytest.raises(ValidationError, match="docs_dir"):
         load_build_config(build_dict(site=site))

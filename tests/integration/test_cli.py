@@ -112,6 +112,8 @@ def test_build_runs_every_step(
     header = (tmp_path / "overrides" / "site-nav.html").read_text(encoding="utf-8")
     assert 'href="https://www.llm-works.ai/platform/"' in header
     config = tomllib.loads((tmp_path / "zensical.toml").read_text(encoding="utf-8"))
+    # The staged directory, relative to zensical.toml
+    assert config["project"]["docs_dir"] == "docs"
     entry = config["project"]["nav"][1]["Packages"][1]["pkg"]
     assert entry[:3] == [
         "pkg/index.md",

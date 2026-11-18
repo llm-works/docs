@@ -4,6 +4,7 @@
 """Fetch the inputs of a build: each package at its release tag, and the main site's nav and
 brand stylesheets."""
 
+import http.client
 import shutil
 import subprocess
 import urllib.request
@@ -88,7 +89,8 @@ def fetch_text(lg: Logger, url: str, timeout_s: float) -> str:
             # HTTP responses carry a status; file:// responses (local previews) have None.
             status = response.status
             body: bytes = response.read()
-    except OSError as e:
+    # A body cut off mid-transfer raises IncompleteRead, an HTTPException, not an OSError
+    except (OSError, http.client.HTTPException) as e:
         raise FetchError(f"download from {url} failed: {e}") from e
     if status is not None and status != 200:
         raise FetchError(f"download from {url} returned HTTP {status}")

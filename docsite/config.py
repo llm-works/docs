@@ -35,10 +35,15 @@ class SiteConfig(_Frozen):
 
     @model_validator(mode="after")
     def _docs_dir_is_disposable(self) -> "SiteConfig":
-        """The stage step deletes docs_dir, so it cannot be or contain the pages."""
-        pages = self.pages_dir.resolve()
-        if self.docs_dir.resolve() in (pages, *pages.parents):
-            raise ValueError("site.docs_dir is rebuilt on every stage; it cannot hold pages_dir")
+        """stage deletes what docs_dir holds beyond its plan, and reads the pages and checkouts:
+        docs_dir cannot be, contain or lie inside pages_dir or build_dir."""
+        docs = self.docs_dir.resolve()
+        for name, path in (("pages_dir", self.pages_dir), ("build_dir", self.build_dir)):
+            other = path.resolve()
+            if docs == other or docs in other.parents or other in docs.parents:
+                raise ValueError(
+                    f"site.docs_dir is rebuilt on every stage; it cannot overlap site.{name}"
+                )
         return self
 
 

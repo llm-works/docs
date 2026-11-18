@@ -21,14 +21,18 @@ def render_site_config(
     base: Mapping[str, Any],
     trees: Mapping[str, list[NavItem]],
     reference_sources: Sequence[str],
+    docs_dir: str,
 ) -> dict[str, Any]:
     """Return `base` with each package's `{name: name/index.md}` nav entry expanded.
 
     The base lists every package under the Packages section by its landing page. `trees` maps a
     package name to its tree, with paths relative to the package's directory; the tree goes below
     the landing page. `reference_sources` are the checkout directories mkdocstrings reads.
+    `docs_dir`, the directory stage fills, relative to the written config, replaces the base's
+    project.docs_dir, so the two cannot disagree.
     """
     config = copy.deepcopy(dict(base))
+    config.setdefault("project", {})["docs_dir"] = docs_dir
     section = _packages_section(config)
     for name, tree in trees.items():
         _expand(section, name, tree)

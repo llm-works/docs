@@ -3,6 +3,7 @@
 
 """The build steps: fetch inputs, assemble the docs tree, render the header and site config."""
 
+import os
 import tomllib
 from pathlib import Path
 
@@ -100,7 +101,9 @@ class Build:
             for pkg in self._cfg.packages
             if pkg.reference is not None
         ]
-        config = render_site_config(base, trees, sources)
+        # Zensical resolves docs_dir from the config file's directory
+        docs_dir = os.path.relpath(site.docs_dir.resolve(), site.zensical_config.parent.resolve())
+        config = render_site_config(base, trees, sources, Path(docs_dir).as_posix())
         site.zensical_config.write_text(tomli_w.dumps(config), encoding="utf-8")
         self._lg.info("site config rendered", extra={"output": str(site.zensical_config)})
         return site.zensical_config
