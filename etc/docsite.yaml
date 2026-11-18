@@ -13,8 +13,13 @@ logging:
 site:
   # Package checkouts and the downloaded nav partial
   build_dir: .build/src
-  # Zensical docs_dir; each package's guides are staged under <docs_dir>/<name>/guides
+  # The site's own pages: home, Get started, How-to guides, Concepts, package landing pages
+  pages_dir: pages
+  # Zensical docs_dir, rebuilt by every stage: pages_dir, then each package's docs under <name>/
   docs_dir: docs
+  # Zensical config: the tracked base, and the generated file Zensical reads
+  zensical_base: zensical.base.toml
+  zensical_config: zensical.toml
 
 # The header is the main site's nav, fetched live at every build so a nav change on
 # www.llm-works.ai needs only a docs rebuild, not a change here.
@@ -27,14 +32,83 @@ nav:
   output: overrides/partials/site-nav.html
   timeout_s: 10
 
-# Each package is fetched at a pinned release tag. `docs` is an allowlist of paths under
-# the package's docs/ directory: only these files are published, so internal notes in a
-# package's docs/ never reach the site. No wildcards: a new file must be listed to ship.
-#
-#   - name: appinfra
-#     repo: https://github.com/llm-works/appinfra.git
-#     tag: vX.Y.Z
-#     docs:
-#       - index.md
-#       - guides/getting-started.md
-packages: []
+# The main site's shared stylesheets, fetched with the nav and loaded before pages/assets/extra.css:
+# tokens.css holds the brand's custom properties (--bg, --accent, --mono, ...), which extra.css
+# uses instead of copied values; nav.css styles the nav partial and its theme switch.
+brand:
+  tokens_url: https://www.llm-works.ai/partials/tokens.css
+  nav_css_url: https://www.llm-works.ai/partials/nav.css
+  timeout_s: 10
+
+# Each package is fetched at a pinned release tag. `docs_root` is its docs directory in the
+# repo (default: docs). The package's docs are the source and are published as they are; the
+# arrangement is the site's. `docs` is the package's tree in the site nav and its allowlist at
+# once: only the files it lists are published, in that order. An entry is a path (titled by the
+# page's heading), {Title: path}, or {Section: [entries]}. No wildcards: a new file must be
+# listed to ship. `rename` stages a file under another name. `reference` adds an API reference
+# generated from the package's docstrings. Each package also needs a landing page,
+# pages/<name>/index.md, and an entry {<name>: <name>/index.md} under Packages in
+# zensical.base.toml.
+packages:
+  - name: appinfra
+    repo: https://github.com/llm-works/appinfra.git
+    tag: v0.15.0
+    docs_root: appinfra/docs
+    # Zensical takes a README.md as the folder's index, which is the landing page here
+    rename:
+      README.md: user-guide.md
+    # Generated from the docstrings at the tag: one page per top-level module of appinfra/
+    reference:
+      package: appinfra
+    # Not listed: SECURITY.md, and index.md, the `appinfra docs` CLI's navigation page
+    # (the landing page here is pages/appinfra/index.md)
+    docs:
+      - User guide: README.md
+      - Getting started: getting-started.md
+      - Guides:
+          - Configuration:
+              - guides/configuration-precedence.md
+              - guides/environment-variables.md
+              - guides/config-protocol.md
+              - guides/decorator-config-pattern.md
+          - Logging:
+              - guides/logging-builder.md
+              - guides/config-based-logging.md
+              - guides/hot-reload-logging.md
+          - Applications:
+              - guides/framework-integration.md
+              - guides/library-mode-bootstrap.md
+              - guides/api-stability.md
+          - Testing:
+              - guides/pytest-plugin.md
+              - guides/pg-test-helper.md
+              - guides/test-suites.md
+              - guides/test-naming-standards.md
+              - guides/coverage-targets.md
+          - Development tooling:
+              - guides/virtual-environment.md
+              - guides/makefile-customization.md
+              - guides/spdx-header-check.md
+              - guides/contributing.md
+      # Hand-written module overviews; the full API reference is generated (see reference)
+      - Module guides:
+          - api/index.md
+          - api/app.md
+          - api/app-builder.md
+          - api/fastapi.md
+          - api/cli.md
+          - api/config.md
+          - api/logging.md
+          - api/ui.md
+          - api/database.md
+          - api/cas.md
+          - api/net.md
+          - api/time.md
+          - api/version.md
+          - api/observability.md
+          - api/service.md
+          - api/subprocess.md
+          - api/utilities.md
+          - api/errors.md
+      # The docs are published under appinfra's licence (Apache 2.0), which ships with them
+      - License: LICENSE

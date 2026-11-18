@@ -1,0 +1,131 @@
+# Zensical base config. `python -m docsite config` writes zensical.toml from this file: each
+# package with docs in etc/docsite.yaml has its entry under Packages expanded into its docs tree,
+# and project.docs_dir is set to site.docs_dir there. Edit this file, not zensical.toml.
+
+[project]
+site_url = "https://docs.llm-works.ai/"
+site_name = "LLM Works Docs"
+site_description = "Documentation for the LLM Works open-source platform."
+site_dir = "site"
+copyright = "&copy; 2026 LLM Works LLC"
+# The main site's brand tokens and nav styles first (fetched by docsite), then this site's own
+extra_css = ["assets/brand/tokens.css", "assets/brand/nav.css", "assets/extra.css"]
+# tree-open.js before tree-scroll.js: it reopens sections in a new tree before that one measures it
+extra_javascript = [
+  "assets/theme-sync.js",
+  "assets/search-open.js",
+  "assets/tree-open.js",
+  "assets/tree-prev.js",
+  "assets/tree-scroll.js",
+  "assets/tree-toggle.js",
+  "assets/nav-tooltips.js",
+  "assets/toc-active.js",
+]
+
+nav = [
+  { "Home" = "index.md" },
+  { "Get started" = [
+    "get-started/index.md",
+    { "What is LLM Works" = "get-started/what-is-llm-works.md" },
+    { "Installation" = "get-started/installation.md" },
+    { "Quickstart: your first agent" = "get-started/quickstart.md" },
+  ] },
+  { "How-to guides" = [
+    "how-to/index.md",
+    { "Connect a model" = "how-to/connect-a-model.md" },
+    { "Make typed LLM calls" = "how-to/typed-llm-calls.md" },
+    { "Build an agent" = "how-to/build-an-agent.md" },
+    { "Add knowledge and memory" = "how-to/knowledge-and-memory.md" },
+    { "Configure and log an app" = "how-to/configure-and-log.md" },
+  ] },
+  { "Concepts" = [
+    "concepts/index.md",
+    { "Architecture" = "concepts/architecture.md" },
+  ] },
+  # The section's own index page first: without one, navigation.indexes takes a package's
+  # landing page as the section page and drops it from the tree. Then one entry per package,
+  # by its landing page in pages/<name>/index.md.
+  { "Packages" = [
+    "packages/index.md",
+    { "appinfra" = "appinfra/index.md" },
+    { "llm-infer" = "llm-infer/index.md" },
+    { "llm-saia" = "llm-saia/index.md" },
+    { "llm-kelt" = "llm-kelt/index.md" },
+    { "llm-gent" = "llm-gent/index.md" },
+  ] },
+]
+
+[project.theme]
+custom_dir = "overrides"
+language = "en"
+font = false
+features = [
+  "content.code.copy",
+  "navigation.indexes",
+  "navigation.instant",
+  "navigation.path",
+  "navigation.top",
+  "navigation.tracking",
+  "search.highlight",
+  "toc.follow",
+]
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to light mode"
+
+# Text links on the right of the footer (overrides/partials/footer.html), the main site's.
+# llms.txt is the main site's until this site has its own.
+[[project.extra.footer_links]]
+name = "llms.txt"
+link = "https://www.llm-works.ai/llms.txt"
+
+[[project.extra.footer_links]]
+name = "Terms"
+link = "https://www.llm-works.ai/terms/"
+
+# Generated API reference. `python -m docsite config` adds handlers.python.paths: the checkouts of
+# the packages that have a reference.
+[project.plugins.mkdocstrings.handlers.python.options]
+# Fences the indented example code that docstrings put under titles like "Example:"
+extensions = ["docsite/docstring_code.py:CodeBlocks"]
+docstring_style = "google"
+members_order = "source"
+show_submodules = true
+show_root_heading = false
+show_source = false
+show_signature_annotations = true
+separate_signature = true
+merge_init_into_class = true
+heading_level = 2
+show_symbol_type_heading = true
+show_symbol_type_toc = true
+
+[project.markdown_extensions]
+# Package docs are written for GitHub: lists may start right after a paragraph, and nested
+# items are indented by two spaces. Python-Markdown needs a blank line and four spaces.
+mdx_breakless_lists = {}
+mdx_truly_sane_lists = { nested_indent = 2, truly_sane = true }
+admonition = {}
+attr_list = {}
+md_in_html = {}
+pymdownx.details = {}
+pymdownx.highlight.anchor_linenums = true
+pymdownx.inlinehilite = {}
+pymdownx.superfences = {}
+# Icons in pages, e.g. :lucide-rocket: on cards
+pymdownx.emoji = { emoji_index = "zensical.extensions.emoji.twemoji", emoji_generator = "zensical.extensions.emoji.to_svg" }
+
+# Package docs are written for GitHub, so heading anchors follow GitHub's rules
+# (e.g. "A — B" becomes #a--b), and their in-page links resolve here too.
+[project.markdown_extensions.toc]
+permalink = true
+slugify = { object = "pymdownx.slugs.slugify", kwds = { case = "lower" } }
