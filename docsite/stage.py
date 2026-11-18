@@ -47,6 +47,9 @@ class DocsStager:
     def stage(self, pkg: Package, checkout: Path) -> Path:
         """Copy `pkg`'s allowlisted docs; fail if any listed file is missing or a symlink."""
         source = checkout / "docs"
+        # rglob follows a symlinked root, which would list files from wherever it points.
+        if source.is_symlink():
+            raise StageError(f"{pkg.name} {pkg.tag}: docs/ is a symlink")
         sel = select(_list_files(source), pkg.docs)
         if sel.missing:
             raise StageError(f"{pkg.name} {pkg.tag}: allowlisted docs missing: {list(sel.missing)}")

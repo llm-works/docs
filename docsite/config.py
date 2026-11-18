@@ -7,6 +7,7 @@ import re
 from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
 from typing import Any
+from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -64,9 +65,15 @@ class NavConfig(_Frozen):
 
 
 def _check_origin(field: str, value: str) -> None:
-    """Reject anything but an http(s) origin without a trailing slash."""
-    if not value.startswith(("https://", "http://")) or value.endswith("/"):
-        raise ValueError(f"{field} must be an http(s) origin without a trailing '/'")
+    """Reject anything but scheme://host[:port], with no path, query or fragment."""
+    parts = urlsplit(value)
+    # Comparing against the rebuilt origin also catches what urlsplit drops, like a bare '?'.
+    if (
+        parts.scheme not in ("https", "http")
+        or not parts.hostname
+        or value != f"{parts.scheme}://{parts.netloc}"
+    ):
+        raise ValueError(f"{field} must be an http(s) origin: scheme://host[:port], nothing after")
 
 
 class Package(_Frozen):

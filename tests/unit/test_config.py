@@ -76,7 +76,11 @@ def test_package_names_are_unique() -> None:
         ("url", "ftp://example.com/nav.html"),
         ("site_origin", "https://www.llm-works.ai/"),
         ("site_origin", "www.llm-works.ai"),
+        ("site_origin", "https://www.llm-works.ai?preview=1"),
+        ("site_origin", "https://www.llm-works.ai/sub"),
+        ("site_origin", "https://www.llm-works.ai#x"),
         ("docs_origin", ""),
+        ("docs_origin", "https://"),
         ("docs_origin", "https://docs.llm-works.ai/"),
         ("timeout_s", 0),
     ],
@@ -86,6 +90,12 @@ def test_nav_fields_are_checked(field: str, value: object) -> None:
     nav = build_dict()["nav"] | {field: value}
     with pytest.raises(ValidationError):
         load_build_config(build_dict(nav=nav))
+
+
+def test_origin_with_port_is_allowed() -> None:
+    """A local preview server's origin carries a port."""
+    nav = build_dict()["nav"] | {"docs_origin": "http://localhost:8000"}
+    assert load_build_config(build_dict(nav=nav)).nav.docs_origin == "http://localhost:8000"
 
 
 def test_empty_site_origin_is_allowed() -> None:

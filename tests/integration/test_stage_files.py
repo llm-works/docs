@@ -56,6 +56,18 @@ def test_symlinked_doc_is_rejected(lg: Logger, tmp_path: Path) -> None:
         DocsStager(lg, tmp_path / "docs").stage(_package("leak.md"), checkout)
 
 
+def test_symlinked_docs_root_is_rejected(lg: Logger, tmp_path: Path) -> None:
+    """docs/ pointing elsewhere would publish that directory's files under allowlisted names."""
+    checkout = tmp_path / "co"
+    private = checkout / "private"
+    private.mkdir(parents=True)
+    (private / "INTRO.md").write_text("private", encoding="utf-8")
+    (checkout / "docs").symlink_to(private)
+    with pytest.raises(StageError, match="symlink"):
+        DocsStager(lg, tmp_path / "docs").stage(_package("INTRO.md"), checkout)
+    assert not (tmp_path / "docs" / "pkg").exists()
+
+
 def test_checkout_without_docs_dir_fails(lg: Logger, tmp_path: Path) -> None:
     """A package without docs/ has every listed file missing."""
     (tmp_path / "co").mkdir()

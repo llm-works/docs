@@ -38,14 +38,26 @@ class PackageFetcher:
             "-c", "advice.detachedHead=false", "clone", "--quiet", "--depth", "1",
             "--branch", pkg.tag, "--", pkg.repo, str(dest),
         )  # fmt: skip
-        # --branch also accepts a branch, and prefers one that shares the tag's name; only the
-        # tagged commit is a valid pin. ^{commit} peels an annotated tag to its commit.
-        head = _git("-C", str(dest), "rev-parse", "HEAD")
-        tagged = _git("-C", str(dest), "rev-parse", "--verify", f"refs/tags/{pkg.tag}^{{commit}}")
-        if head != tagged:
-            raise FetchError(f"{pkg.name}: checkout is not at tag {pkg.tag}")
+        _check_pin(dest, pkg)
         self._lg.info("package fetched", extra={"package": pkg.name, "tag": pkg.tag})
         return dest
+
+
+def _check_pin(dest: Path, pkg: Package) -> None:
+    """Fail unless HEAD is the tagged commit; ^{commit} peels an annotated tag.
+
+    --branch also accepts a branch, and prefers one that shares the tag's name; only the
+    tagged commit is a valid pin.
+    """
+    error = f"{pkg.name}: checkout is not at tag {pkg.tag}"
+    head = _git("-C", str(dest), "rev-parse", "HEAD")
+    try:
+        tagged = _git("-C", str(dest), "rev-parse", "--verify", f"refs/tags/{pkg.tag}^{{commit}}")
+    except FetchError as e:
+        # A shallow clone of a branch lacks any tag that points at an older commit.
+        raise FetchError(error) from e
+    if head != tagged:
+        raise FetchError(error)
 
 
 def _git(*args: str) -> str:
