@@ -59,7 +59,12 @@
     entries = [];
     if (!nav) return;
     nav.querySelectorAll("a.md-nav__link[href*='#']").forEach(function (link) {
-      var id = decodeURIComponent(link.hash.slice(1));
+      var id;
+      try {
+        id = decodeURIComponent(link.hash.slice(1));
+      } catch (e) {
+        return; // a malformed %-escape: skip the entry, keep the others
+      }
       var heading = id && document.getElementById(id);
       if (heading) entries.push({ link: link, heading: heading });
     });
