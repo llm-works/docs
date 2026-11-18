@@ -1,0 +1,17 @@
+{#-
+  The main site's footer (styles.css "footer"): one row, the copyright on the left and text
+  links on the right. Replaces the theme's footer, with its previous/next band, generator credit
+  and social icons. Links come from extra.footer_links in zensical.base.toml.
+-#}
+<footer class="md-footer lw-footer">
+  <div class="lw-footer__inner">
+    <span>{{ config.copyright }}</span>
+    {% if config.extra.footer_links %}
+      <div class="lw-footer__links">
+        {% for item in config.extra.footer_links %}
+          <a href="{{ item.link }}">{{ item.name }}</a>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</footer>

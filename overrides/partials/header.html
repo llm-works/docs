@@ -1,0 +1,20 @@
+{#- The main site's nav and theme switch, unchanged. Narrow screens get a bar for the docs drawer. -#}
+<header class="md-header lw-header" data-md-component="header">
+  <script>
+    {#- Same rule as the main site: the saved choice, else the system preference. -#}
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem("theme"); } catch (e) {}
+      var light = t ? t === "light" : !matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.classList.toggle("light-mode", light);
+      document.body.setAttribute("data-md-color-scheme", light ? "default" : "slate");
+    })();
+  </script>
+  {% include "partials/site-nav.html" %}
+  <div class="lw-docbar">
+    <label class="md-icon lw-docbar__menu" for="__drawer">
+      {% include ".icons/material/menu.svg" %}
+      <span>{{ page.title if page and page.title else config.site_name }}</span>
+    </label>
+  </div>
+</header>
