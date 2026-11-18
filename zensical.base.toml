@@ -13,6 +13,7 @@ extra_css = ["assets/brand/tokens.css", "assets/brand/nav.css", "assets/extra.cs
 # tree-open.js before tree-scroll.js: it reopens sections in a new tree before that one measures it
 extra_javascript = [
   "assets/theme-sync.js",
+  "assets/search-open.js",
   "assets/tree-open.js",
   "assets/tree-prev.js",
   "assets/tree-scroll.js",

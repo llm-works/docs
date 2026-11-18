@@ -60,7 +60,7 @@ packages:
     # Generated from the docstrings at the tag: one page per top-level module of appinfra/
     reference:
       package: appinfra
-    # Not listed: LICENSE, SECURITY.md, and index.md, the `appinfra docs` CLI's navigation page
+    # Not listed: SECURITY.md, and index.md, the `appinfra docs` CLI's navigation page
     # (the landing page here is pages/appinfra/index.md)
     docs:
       - User guide: README.md
@@ -110,3 +110,5 @@ packages:
           - api/subprocess.md
           - api/utilities.md
           - api/errors.md
+      # The docs are published under appinfra's licence (Apache 2.0), which ships with them
+      - License: LICENSE

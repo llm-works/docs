@@ -1,4 +1,5 @@
-{#- The main site's nav and theme switch, unchanged. Narrow screens get a bar for the docs drawer. -#}
+{#- The main site's nav and theme switch, unchanged. Narrow screens get a bar for the docs drawer
+    and search (search-open.js opens it). -#}
 <header class="md-header lw-header" data-md-component="header">
   <script>
     {#- Same rule as the main site: the saved choice, else the system preference. -#}
@@ -16,5 +17,11 @@
       {% include ".icons/material/menu.svg" %}
       <span>{{ page.title if page and page.title else config.site_name }}</span>
     </label>
+    <button type="button" class="lw-docbar__search" aria-label="Search">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+      </svg>
+    </button>
   </div>
 </header>
