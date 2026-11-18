@@ -22,6 +22,17 @@ classifiers = [
 dependencies = [
     # validation: pydantic, for the build config models
     "appinfra[validation]>=0.14.0",
+    # writes the generated zensical.toml
+    "tomli-w>=1.2",
+    # the site generator; pinned, upgrades are checked against the built site
+    "zensical==0.1.2",
+    # the generated API reference; mkdocstrings-python brings griffe, which the docstring
+    # extension (docsite/docstring_code.py) builds on
+    "mkdocstrings==1.0.8",
+    "mkdocstrings-python==2.0.10",
+    # GitHub-style lists in package docs: no blank line before a list, two-space nesting
+    "mdx_breakless_lists==1.0.1",
+    "mdx_truly_sane_lists==1.3",
 ]
 
 [project.optional-dependencies]

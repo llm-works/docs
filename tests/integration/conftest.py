@@ -14,6 +14,11 @@ DOCS = {
     "demo/demo.gif": "GIF89a",
     "known-issues.md": "internal notes\n",
 }
+# A small package beside docs/, for the generated reference
+SOURCE = {
+    "pkgmod/__init__.py": '"""The package."""\n',
+    "pkgmod/core.py": '"""Core module."""\n\n\ndef run() -> None:\n    """Run."""\n',
+}
 
 
 def git(cwd: Path, *args: str) -> None:
@@ -28,10 +33,11 @@ def git(cwd: Path, *args: str) -> None:
 
 @pytest.fixture
 def package_repo(tmp_path: Path) -> Path:
-    """A repo with docs/ committed and tagged TAG, plus a branch named `rel`."""
+    """A repo with docs/ and a package committed and tagged TAG, plus a branch named `rel`."""
     repo = tmp_path / "pkg-repo"
-    for rel, text in DOCS.items():
-        path = repo / "docs" / rel
+    files = {f"docs/{rel}": text for rel, text in DOCS.items()} | SOURCE
+    for rel, text in files.items():
+        path = repo / rel
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
     git(tmp_path, "init", "--quiet", "--initial-branch=main", str(repo))

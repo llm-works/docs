@@ -33,12 +33,22 @@ def package_dict(**overrides: Any) -> dict[str, Any]:
 def build_dict(**overrides: Any) -> dict[str, Any]:
     """A valid build config mapping, with top-level sections replaced by `overrides`."""
     cfg: dict[str, Any] = {
-        "site": {"build_dir": ".build/src", "docs_dir": "docs"},
+        "site": {
+            "build_dir": ".build/src",
+            "docs_dir": "docs",
+            "pages_dir": "pages",
+            "zensical_base": "zensical.base.toml",
+            "zensical_config": "zensical.toml",
+        },
         "nav": {
             "url": "https://www.llm-works.ai/partials/nav.html",
             "site_origin": "https://www.llm-works.ai",
             "docs_origin": "https://docs.llm-works.ai",
             "output": "overrides/partials/site-nav.html",
+        },
+        "brand": {
+            "tokens_url": "https://www.llm-works.ai/partials/tokens.css",
+            "nav_css_url": "https://www.llm-works.ai/partials/nav.css",
         },
         "packages": [package_dict()],
     }

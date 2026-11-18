@@ -3,6 +3,7 @@
 
 """Downloading the main site's nav, with urlopen mocked at the call site."""
 
+import http.client
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -52,6 +53,16 @@ def test_non_utf8_body_fails() -> None:
     with patch("docsite.fetch.urllib.request.urlopen") as urlopen:
         urlopen.return_value = _response(200, b"<nav>\xff</nav>")
         with pytest.raises(FetchError, match="not valid UTF-8"):
+            fetch_nav(MagicMock(spec=Logger), NAV)
+
+
+def test_truncated_response_fails() -> None:
+    """A body cut off mid-transfer surfaces as FetchError naming the URL, like a network error."""
+    response = _response(200, b"")
+    response.read.side_effect = http.client.IncompleteRead(b"<nav")
+    with patch("docsite.fetch.urllib.request.urlopen") as urlopen:
+        urlopen.return_value = response
+        with pytest.raises(FetchError, match=f"download from {NAV.url} failed"):
             fetch_nav(MagicMock(spec=Logger), NAV)
 
 

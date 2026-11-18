@@ -5,7 +5,7 @@
 
 from appinfra.app import AppBuilder
 
-from .tools import BuildTool, FetchTool, NavTool, StageTool
+from .tools import BuildTool, FetchTool, NavTool, SiteConfigTool, StageTool
 
 
 def main() -> int:
@@ -18,7 +18,7 @@ def main() -> int:
         .done()
         .cli.with_all_flags()
         .done()
-        .tools.with_tools(FetchTool(), StageTool(), NavTool(), BuildTool())
+        .tools.with_tools(FetchTool(), StageTool(), NavTool(), SiteConfigTool(), BuildTool())
         .done()
         .build()
     )

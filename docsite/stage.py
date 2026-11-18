@@ -1,25 +1,27 @@
 # SPDX-License-Identifier: MIT
 # SPDX-FileCopyrightText: Copyright 2026 The llm-works-docs Authors
 
-"""Stage a fetched package's allowlisted docs into the site's docs directory."""
+"""Assemble the site's docs directory: select each package's allowlisted docs, then sync."""
 
-import shutil
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from appinfra.log import Logger
 
 from .config import Package
 
+# What a docs file is made from: a file to copy, or generated text
+Source = Path | str
+
 
 class StageError(RuntimeError):
-    """A package's docs do not match its allowlist."""
+    """A package's docs do not match its allowlist, or two sources claim one docs path."""
 
 
 @dataclass(frozen=True)
 class Selection:
-    """How a package's docs/ compares with its allowlist."""
+    """How a package's docs directory compares with its allowlist."""
 
     copy: tuple[str, ...]
     missing: tuple[str, ...]
@@ -27,7 +29,7 @@ class Selection:
 
 
 def select(available: Iterable[str], allowlist: Sequence[str]) -> Selection:
-    """Split docs/ files into those to copy, listed-but-absent, and present-but-unlisted."""
+    """Split docs files into those to copy, listed-but-absent, and present-but-unlisted."""
     present = set(available)
     listed = set(allowlist)
     return Selection(
@@ -38,19 +40,15 @@ def select(available: Iterable[str], allowlist: Sequence[str]) -> Selection:
 
 
 class DocsStager:
-    """Copies allowlisted docs from a checkout to <docs_dir>/<name>/guides."""
+    """Maps a checkout's allowlisted docs to their site paths, relative to the package's dir."""
 
-    def __init__(self, lg: Logger, docs_dir: Path) -> None:
+    def __init__(self, lg: Logger) -> None:
         self._lg = lg
-        self._docs_dir = docs_dir
 
-    def stage(self, pkg: Package, checkout: Path) -> Path:
-        """Copy `pkg`'s allowlisted docs; fail if any listed file is missing or a symlink."""
-        source = checkout / "docs"
-        # rglob follows a symlinked root, which would list files from wherever it points.
-        if source.is_symlink():
-            raise StageError(f"{pkg.name} {pkg.tag}: docs/ is a symlink")
-        sel = select(_list_files(source), pkg.docs)
+    def files(self, pkg: Package, checkout: Path) -> dict[str, Path]:
+        """Site path (renames applied) -> source file; fail on a missing file or a symlink."""
+        source = _docs_source(pkg, checkout)
+        sel = select(_list_files(source), pkg.files)
         if sel.missing:
             raise StageError(f"{pkg.name} {pkg.tag}: allowlisted docs missing: {list(sel.missing)}")
         if sel.unlisted:
@@ -58,13 +56,65 @@ class DocsStager:
                 "docs not in allowlist, skipped",
                 extra={"package": pkg.name, "files": list(sel.unlisted)},
             )
-        dest = self._docs_dir / pkg.name / "guides"
-        if dest.exists():
-            shutil.rmtree(dest)
+        files = {}
         for path in sel.copy:
-            _copy_file(source, dest, path, pkg.name)
-        self._lg.info("docs staged", extra={"package": pkg.name, "files": len(sel.copy)})
-        return dest
+            src = source / path
+            # A symlink could pull content from outside the docs root.
+            if src.is_symlink():
+                raise StageError(f"{pkg.name}: allowlisted docs path {path!r} is a symlink")
+            files[pkg.site_path(path)] = src
+        return files
+
+
+def merge(plan: dict[str, Source], files: Mapping[str, Source], owner: str) -> None:
+    """Add `files` to `plan`; a path that is already taken is an error, never an overwrite."""
+    taken = sorted(plan.keys() & files.keys())
+    if taken:
+        raise StageError(f"{owner}: docs paths already taken by another source: {taken}")
+    plan.update(files)
+
+
+def sync_tree(lg: Logger, plan: Mapping[str, Source], root: Path) -> None:
+    """Make `root` hold exactly `plan`: write changed files, remove the rest.
+
+    Files are updated in place rather than by recreating the directory, so a live-reload server
+    watching `root` keeps seeing changes.
+    """
+    written = 0
+    for rel, src in plan.items():
+        data = src.read_bytes() if isinstance(src, Path) else src.encode("utf-8")
+        target = root / rel
+        if target.is_file() and target.read_bytes() == data:
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+        written += 1
+    removed = _remove_extras(root, set(plan))
+    lg.info("docs synced", extra={"files": len(plan), "written": written, "removed": removed})
+
+
+def _remove_extras(root: Path, keep: set[str]) -> int:
+    """Delete files under `root` not in `keep`, then directories left empty."""
+    removed = 0
+    for path in sorted(root.rglob("*"), reverse=True):
+        rel = path.relative_to(root).as_posix()
+        if (path.is_file() or path.is_symlink()) and rel not in keep:
+            path.unlink()
+            removed += 1
+        elif path.is_dir() and not any(path.iterdir()):
+            path.rmdir()
+    return removed
+
+
+def _docs_source(pkg: Package, checkout: Path) -> Path:
+    """The package's docs directory; no part of its path may be a symlink."""
+    path = checkout
+    for part in PurePosixPath(pkg.docs_root).parts:
+        path = path / part
+        # rglob follows a symlinked directory, which would list files from wherever it points.
+        if path.is_symlink():
+            raise StageError(f"{pkg.name} {pkg.tag}: {pkg.docs_root}/ has a symlink in its path")
+    return path
 
 
 def _list_files(root: Path) -> list[str]:
@@ -73,13 +123,3 @@ def _list_files(root: Path) -> list[str]:
         return []
     entries = (p for p in root.rglob("*") if p.is_symlink() or p.is_file())
     return [p.relative_to(root).as_posix() for p in entries]
-
-
-def _copy_file(source: Path, dest: Path, path: str, pkg_name: str) -> None:
-    """Copy one regular file; a symlink could pull content from outside docs/."""
-    src = source / path
-    if src.is_symlink():
-        raise StageError(f"{pkg_name}: allowlisted docs path {path!r} is a symlink")
-    target = dest / path
-    target.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(src, target)
