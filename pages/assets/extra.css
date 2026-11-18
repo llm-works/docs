@@ -2,7 +2,10 @@
    assets/brand/tokens.css (custom properties: --bg, --bg-raised, --edge-raised, --text,
    --text-muted, --accent, --accent-dim, --mono, --card-pad, --card-gap, ...) and
    assets/brand/nav.css (the nav partial and its theme switch). Both are fetched by docsite;
-   colors and fonts come from the tokens, nothing here copies them. */
+   colors and fonts come from the tokens, nothing here copies them.
+
+   Many selectors target the theme's markup (zensical 0.1.2, pinned in pyproject.toml), like the
+   template in overrides/main.html: re-check the page when upgrading zensical. */
 
 @font-face {
   font-family: "Oswald";
@@ -21,6 +24,10 @@
    rule loads after the theme's and media queries add no specificity, so it holds at every width. */
 html { font-size: 20px; }
 
+/* --- The main site's container width (nav.css: .site-nav .container) --- */
+/* The content column and the footer take it, so the page lines up with the nav */
+:root { --lw-container: 1080px; }
+
 /* --- The theme's palette from the brand tokens --- */
 /* Same specificity as the theme's own scheme selectors, and later, so these win. The tokens
    switch with html.light-mode, which the header script sets together with the scheme. */
@@ -29,8 +36,14 @@ html { font-size: 20px; }
   --md-default-fg-color: var(--text);
   --md-default-fg-color--light: var(--text-muted);
   --md-accent-fg-color: var(--accent);
-  --md-accent-fg-color--transparent: color-mix(in srgb, var(--accent) 8%, transparent);
   --md-typeset-a-color: var(--accent);
+}
+/* A browser without color-mix() keeps the theme's own value (a custom property cannot fall back
+   to an earlier declaration: it is invalid only where it is used) */
+@supports (color: color-mix(in srgb, red 50%, blue)) {
+  [data-md-color-scheme] {
+    --md-accent-fg-color--transparent: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
 }
 [data-md-color-scheme="default"] { --md-primary-fg-color: var(--accent); }
 /* Dark: the primary color is the page background, so nothing the theme paints with it stands out. */
@@ -198,6 +211,8 @@ html { font-size: 20px; }
    and the other items' text */
 .md-nav--primary a.md-nav__link.lw-tree-prev:not(.md-nav__link--active),
 .md-nav--primary .md-nav__container:has(> a.lw-tree-prev) > .md-nav__link {
+  /* Without color-mix(), the current page's blue */
+  color: var(--accent);
   color: color-mix(in srgb, var(--accent) 50%, var(--text-muted));
 }
 
@@ -258,6 +273,8 @@ html { scrollbar-gutter: auto; }
     align-items: center;
     height: 40px;
     padding: 0 16px;
+    /* Without color-mix(), opaque */
+    background: var(--bg);
     background: color-mix(in srgb, var(--bg) 85%, transparent);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -304,13 +321,13 @@ html { scrollbar-gutter: auto; }
    window's scrollbar does not enter into it. */
 @media screen and (min-width: 76.25em) {
   .md-main__inner.md-grid {
-    max-width: calc(1080px + 2 * 320px + 2 * 16px);
+    max-width: calc(var(--lw-container) + 2 * 320px + 2 * 16px);
     padding: 0 16px;
   }
   .md-sidebar--primary,
   .md-sidebar--secondary {
     flex-shrink: 0;
-    width: clamp(12.1rem, (100% - 1080px) / 2, 320px);
+    width: clamp(12.1rem, (100% - var(--lw-container)) / 2, 320px);
   }
   /* The theme pads the outline to a fixed 11.5rem whatever its column's width; let it fill */
   .md-sidebar--secondary .md-sidebar__inner { padding-right: 0; }
@@ -354,7 +371,7 @@ html { scrollbar-gutter: auto; }
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  max-width: 1080px;
+  max-width: var(--lw-container);
   min-height: 56px;
   margin: 0 auto;
   padding: 8px 24px;
