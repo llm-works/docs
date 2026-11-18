@@ -38,18 +38,23 @@ class PackageFetcher:
             "-c", "advice.detachedHead=false", "clone", "--quiet", "--depth", "1",
             "--branch", pkg.tag, "--", pkg.repo, str(dest),
         )  # fmt: skip
-        # --branch also accepts a branch name; only a release tag is a valid pin.
-        _git("-C", str(dest), "rev-parse", "--quiet", "--verify", f"refs/tags/{pkg.tag}")
+        # --branch also accepts a branch, and prefers one that shares the tag's name; only the
+        # tagged commit is a valid pin. ^{commit} peels an annotated tag to its commit.
+        head = _git("-C", str(dest), "rev-parse", "HEAD")
+        tagged = _git("-C", str(dest), "rev-parse", "--verify", f"refs/tags/{pkg.tag}^{{commit}}")
+        if head != tagged:
+            raise FetchError(f"{pkg.name}: checkout is not at tag {pkg.tag}")
         self._lg.info("package fetched", extra={"package": pkg.name, "tag": pkg.tag})
         return dest
 
 
-def _git(*args: str) -> None:
-    """Run git; raise FetchError with its stderr when it fails."""
+def _git(*args: str) -> str:
+    """Run git and return its stripped stdout; raise FetchError with stderr when it fails."""
     result = subprocess.run(["git", *args], capture_output=True, text=True, check=False)
     if result.returncode != 0:
         detail = result.stderr.strip() or f"git exited with {result.returncode}"
         raise FetchError(detail)
+    return result.stdout.strip()
 
 
 def fetch_nav(lg: Logger, nav: NavConfig) -> str:
@@ -64,5 +69,9 @@ def fetch_nav(lg: Logger, nav: NavConfig) -> str:
         raise FetchError(f"nav download from {nav.url} failed: {e}") from e
     if status is not None and status != 200:
         raise FetchError(f"nav download from {nav.url} returned HTTP {status}")
+    try:
+        html = body.decode("utf-8")
+    except UnicodeDecodeError as e:
+        raise FetchError(f"nav from {nav.url} is not valid UTF-8: {e}") from e
     lg.info("nav fetched", extra={"url": nav.url, "bytes": len(body)})
-    return body.decode("utf-8")
+    return html

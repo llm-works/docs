@@ -16,7 +16,8 @@ DOCS = {
 }
 
 
-def _git(cwd: Path, *args: str) -> None:
+def git(cwd: Path, *args: str) -> None:
+    """Run git in `cwd` with a fixed test identity."""
     subprocess.run(
         ["git", "-c", "user.name=test", "-c", "user.email=test@example.invalid", *args],
         cwd=cwd,
@@ -33,9 +34,9 @@ def package_repo(tmp_path: Path) -> Path:
         path = repo / "docs" / rel
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
-    _git(tmp_path, "init", "--quiet", "--initial-branch=main", str(repo))
-    _git(repo, "add", ".")
-    _git(repo, "commit", "--quiet", "-m", "docs")
-    _git(repo, "tag", TAG)
-    _git(repo, "branch", "rel")
+    git(tmp_path, "init", "--quiet", "--initial-branch=main", str(repo))
+    git(repo, "add", ".")
+    git(repo, "commit", "--quiet", "-m", "docs")
+    git(repo, "tag", TAG)
+    git(repo, "branch", "rel")
     return repo

@@ -37,6 +37,7 @@ site:
 nav:
   url: {nav_file.as_uri()}
   site_origin: https://www.llm-works.ai
+  docs_origin: https://docs.llm-works.ai
   output: {tmp_path / "overrides" / "site-nav.html"}
 packages:
   - name: pkg

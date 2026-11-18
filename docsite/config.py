@@ -35,6 +35,7 @@ class NavConfig(_Frozen):
 
     url: str
     site_origin: str
+    docs_origin: str
     output: Path
     timeout_s: float = Field(default=10.0, gt=0)
 
@@ -48,11 +49,24 @@ class NavConfig(_Frozen):
 
     @field_validator("site_origin")
     @classmethod
-    def _origin_form(cls, value: str) -> str:
+    def _site_origin_form(cls, value: str) -> str:
         """An origin without a trailing slash, or empty for root-relative links."""
-        if value and (not value.startswith(("https://", "http://")) or value.endswith("/")):
-            raise ValueError("nav.site_origin must be empty or an http(s) origin without '/'")
+        if value:
+            _check_origin("nav.site_origin", value)
         return value
+
+    @field_validator("docs_origin")
+    @classmethod
+    def _docs_origin_form(cls, value: str) -> str:
+        """The docs site's origin, without a trailing slash."""
+        _check_origin("nav.docs_origin", value)
+        return value
+
+
+def _check_origin(field: str, value: str) -> None:
+    """Reject anything but an http(s) origin without a trailing slash."""
+    if not value.startswith(("https://", "http://")) or value.endswith("/"):
+        raise ValueError(f"{field} must be an http(s) origin without a trailing '/'")
 
 
 class Package(_Frozen):

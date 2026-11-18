@@ -22,6 +22,8 @@ nav:
   url: https://www.llm-works.ai/partials/nav.html
   # Root-relative links in the nav are rewritten to this origin
   site_origin: https://www.llm-works.ai
+  # This site's origin: a link to it in the main site's nav becomes the current Docs item
+  docs_origin: https://docs.llm-works.ai
   output: overrides/partials/site-nav.html
   timeout_s: 10
 

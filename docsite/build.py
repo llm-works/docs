@@ -40,9 +40,11 @@ class Build:
     def nav(self) -> Path:
         """Render the fetched nav as the docs header partial."""
         nav_html = self._nav_source.read_text(encoding="utf-8")
-        output = self._cfg.nav.output
+        nav = self._cfg.nav
+        output = nav.output
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(render_header(nav_html, self._cfg.nav.site_origin), encoding="utf-8")
+        header = render_header(nav_html, nav.site_origin, nav.docs_origin)
+        output.write_text(header, encoding="utf-8")
         self._lg.info("header rendered", extra={"output": str(output)})
         return output
 

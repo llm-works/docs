@@ -15,6 +15,7 @@ from docsite.fetch import USER_AGENT, FetchError, fetch_nav
 NAV = NavConfig(
     url="https://www.llm-works.ai/partials/nav.html",
     site_origin="https://www.llm-works.ai",
+    docs_origin="https://docs.llm-works.ai",
     output=Path("overrides/partials/site-nav.html"),
 )
 
@@ -43,6 +44,14 @@ def test_non_200_status_fails() -> None:
     with patch("docsite.fetch.urllib.request.urlopen") as urlopen:
         urlopen.return_value = _response(204, b"")
         with pytest.raises(FetchError, match="HTTP 204"):
+            fetch_nav(MagicMock(spec=Logger), NAV)
+
+
+def test_non_utf8_body_fails() -> None:
+    """Undecodable markup surfaces as FetchError, which the CLI reports as exit 1."""
+    with patch("docsite.fetch.urllib.request.urlopen") as urlopen:
+        urlopen.return_value = _response(200, b"<nav>\xff</nav>")
+        with pytest.raises(FetchError, match="not valid UTF-8"):
             fetch_nav(MagicMock(spec=Logger), NAV)
 
 

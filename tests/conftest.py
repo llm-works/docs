@@ -37,6 +37,7 @@ def build_dict(**overrides: Any) -> dict[str, Any]:
         "nav": {
             "url": "https://www.llm-works.ai/partials/nav.html",
             "site_origin": "https://www.llm-works.ai",
+            "docs_origin": "https://docs.llm-works.ai",
             "output": "overrides/partials/site-nav.html",
         },
         "packages": [package_dict()],

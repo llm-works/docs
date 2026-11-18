@@ -76,6 +76,8 @@ def test_package_names_are_unique() -> None:
         ("url", "ftp://example.com/nav.html"),
         ("site_origin", "https://www.llm-works.ai/"),
         ("site_origin", "www.llm-works.ai"),
+        ("docs_origin", ""),
+        ("docs_origin", "https://docs.llm-works.ai/"),
         ("timeout_s", 0),
     ],
 )
