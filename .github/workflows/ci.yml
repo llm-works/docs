@@ -39,6 +39,8 @@ jobs:
           # TODO: remove after appinfra is released to PyPI
           # check: ruff, mypy and pylint, which the duplicated-code check runs
           python -m pip install "appinfra[check] @ git+https://github.com/llm-works/appinfra.git@develop"
+          # the project's own dependencies (pydantic), so mypy sees real types
+          python -m pip install -e ".[dev]"
 
       - name: Lint workflows
         # zizmor policy in .github/zizmor.yml; actionlint runs shellcheck on run: scripts
