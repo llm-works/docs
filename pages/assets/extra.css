@@ -1,0 +1,403 @@
+/* The docs site's own styles, on top of the main site's brand stylesheets, which load first:
+   assets/brand/tokens.css (custom properties: --bg, --bg-raised, --edge-raised, --text,
+   --text-muted, --accent, --accent-dim, --mono, --card-pad, --card-gap, ...) and
+   assets/brand/nav.css (the nav partial and its theme switch). Both are fetched by docsite;
+   colors and fonts come from the tokens, nothing here copies them.
+
+   Many selectors target the theme's markup (zensical 0.1.2, pinned in pyproject.toml), like the
+   template in overrides/main.html: re-check the page when upgrading zensical. */
+
+@font-face {
+  font-family: "Oswald";
+  font-weight: 600 700;
+  font-display: swap;
+  /* Shipped with this site (SIL OFL, fonts/OFL-Oswald.txt): the main site's copy is another origin. */
+  src: url("fonts/oswald-latin.woff2") format("woff2");
+}
+
+/* --- Root font size: one fixed pixel value, as on the main site --- */
+/* The theme sizes text in rem off a root of 125% of the browser's default font size, stepping up
+   to 137.5% and 150% on wide windows. The main site, and its nav, use fixed px. Both parts of the
+   theme's rule made the docs text diverge from the nav: a larger default font enlarged it, and
+   zooming in narrowed the window below a step, so the text shrank while the nav grew. A fixed
+   root (the theme's base value at the standard 16px default) scales with zoom like the nav. This
+   rule loads after the theme's and media queries add no specificity, so it holds at every width. */
+html { font-size: 20px; }
+
+/* --- The main site's container width (nav.css: .site-nav .container) --- */
+/* The content column and the footer take it, so the page lines up with the nav */
+:root { --lw-container: 1080px; }
+
+/* --- The theme's palette from the brand tokens --- */
+/* Same specificity as the theme's own scheme selectors, and later, so these win. The tokens
+   switch with html.light-mode, which the header script sets together with the scheme. */
+[data-md-color-scheme] {
+  --md-default-bg-color: var(--bg);
+  --md-default-fg-color: var(--text);
+  --md-default-fg-color--light: var(--text-muted);
+  --md-accent-fg-color: var(--accent);
+  --md-typeset-a-color: var(--accent);
+}
+/* A browser without color-mix() keeps the theme's own value (a custom property cannot fall back
+   to an earlier declaration: it is invalid only where it is used) */
+@supports (color: color-mix(in srgb, red 50%, blue)) {
+  [data-md-color-scheme] {
+    --md-accent-fg-color--transparent: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+}
+[data-md-color-scheme="default"] { --md-primary-fg-color: var(--accent); }
+/* Dark: the primary color is the page background, so nothing the theme paints with it stands out. */
+[data-md-color-scheme="slate"] { --md-primary-fg-color: var(--bg); }
+
+/* Body text as the main site's long-form text (blog, story): its font, 16px on 28px lines, no
+   letter-spacing. The theme sets .75rem (15px) on 1.8 with -.01em. Headings and code in the
+   article are em-based, so they keep their proportions to it. */
+.md-content .md-typeset {
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.75;
+  letter-spacing: normal;
+}
+
+/* The main site's display face, without its uppercase: page titles name APIs like AppBuilder. */
+.md-typeset h1 {
+  font-family: "Oswald", "Arial Narrow", sans-serif;
+  letter-spacing: -0.005em;
+}
+
+/* --- Cards --- */
+/* Three per row on a wide page (the theme's 16rem minimum allows only two), the brand's gap. */
+.md-typeset .grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: var(--card-gap);
+}
+
+/* The main site's card on the base background (.product-card): raised surface and edge, 8px
+   radius, card padding, 14px between blocks, mono title, muted description; on hover an accent
+   edge and outline. Docs pages have no raised sections, so cards never step up to --bg-subtle. */
+.md-typeset .grid.cards > ul > li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: var(--card-pad) calc(var(--card-pad) + 4px);
+  background-color: var(--bg-raised);
+  border: 1px solid var(--edge-raised);
+  border-radius: 8px;
+  box-shadow: none;
+  transition: border-color 0.15s;
+}
+.md-typeset .grid.cards > ul > li:hover,
+.md-typeset .grid.cards > ul > li:focus-within {
+  border-color: var(--accent);
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  box-shadow: none;
+}
+.md-typeset .grid.cards > ul > li > p { margin: 0; }
+.md-typeset .grid.cards .lw-card-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--accent);
+}
+.md-typeset .grid.cards strong a {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  text-decoration: none;
+}
+/* The whole card is the title's link: its ::after covers the card (one link per card, so
+   keyboard and screen readers still see a single link). */
+.md-typeset .grid.cards strong a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.md-typeset .grid.cards strong a:focus-visible { outline: none; }
+.md-typeset .grid.cards > ul > li > p:last-child {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-muted);
+}
+
+/* --- Tables: compact rows (the theme's padding makes a one-line parameter row ~48px tall) --- */
+.md-typeset table:not([class]) th,
+.md-typeset table:not([class]) td {
+  padding: 0.4em 0.9em;
+  line-height: 1.45;
+  vertical-align: top;
+}
+
+/* --- Home lead and actions: the main site's .cta-primary button and .door-link text link --- */
+.md-typeset .lw-lead {
+  font-size: 1.05em;
+  color: var(--text-muted);
+}
+.md-typeset .lw-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+}
+.md-typeset a.lw-cta {
+  display: inline-block;
+  padding: 10px 24px;
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.6;
+  /* Light text in both themes: the button stays blue, as on the main site */
+  color: #f4f4f5;
+  background: var(--accent-dim);
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.md-typeset a.lw-cta:hover { color: #f4f4f5; background: var(--accent); }
+.md-typeset a.lw-link {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+}
+.md-typeset a.lw-link:hover { text-decoration: underline; }
+
+/* --- Tree and "On this page": one line per item; text too long for the column ends in "…" --- */
+/* The full text shows on hover (nav-tooltips.js). min-width: 0 lets the text shrink inside the
+   tree's section rows, which are flex rows with an arrow. */
+.md-nav--primary .md-ellipsis,
+.md-nav--secondary .md-ellipsis {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Sections tree-open.js reopens on a new page appear open at once, without the open animation */
+.lw-tree-restore > .md-nav,
+.lw-tree-restore > .md-nav * { transition: none !important; }
+
+/* --- Tree: top-level sections stand out, items are muted until active or hovered --- */
+/* Top-level sections collapse like any other (no navigation.sections), so the title is the
+   section's own link inside its container row. */
+.md-nav--primary > .md-nav__list > .md-nav__item--nested > .md-nav__container > a.md-nav__link,
+.md-nav--primary > .md-nav__list > .md-nav__item--nested > .md-nav__link {
+  color: var(--text);
+  font-weight: 700;
+}
+.md-nav--primary .md-nav__link { color: var(--text-muted); }
+.md-nav--primary .md-nav__link--active,
+.md-nav--primary .md-nav__link:hover { color: var(--accent); }
+
+/* A section's row, its title and its arrow, is one item (a click on either opens the section's
+   page, tree-toggle.js): it highlights as one, like a page's row, instead of the theme's two
+   boxes. !important: the theme's hover rules for the two boxes are more specific. */
+.md-nav--primary .md-nav__container > .md-nav__link { background: none !important; }
+.md-nav--primary .md-nav__container:hover {
+  background-color: var(--md-default-fg-color--lightest);
+}
+.md-nav--primary .md-nav__container:hover > .md-nav__link { color: var(--accent) !important; }
+.md-nav--primary .md-nav__container:has(> .md-nav__link--active) {
+  background-color: var(--md-accent-fg-color--transparent);
+}
+.md-nav--primary .md-nav__container:has(> .md-nav__link--active) > .md-nav__link {
+  color: var(--accent) !important;
+}
+
+/* The page read before this one (tree-prev.js): a lighter blue, between the current page's blue
+   and the other items' text */
+.md-nav--primary a.md-nav__link.lw-tree-prev:not(.md-nav__link--active),
+.md-nav--primary .md-nav__container:has(> a.lw-tree-prev) > .md-nav__link {
+  /* Without color-mix(), the current page's blue */
+  color: var(--accent);
+}
+/* In @supports: a value with var() that fails only when computed makes the property unset, not
+   the declaration before it */
+@supports (color: color-mix(in srgb, red 50%, blue)) {
+  .md-nav--primary a.md-nav__link.lw-tree-prev:not(.md-nav__link--active),
+  .md-nav--primary .md-nav__container:has(> a.lw-tree-prev) > .md-nav__link {
+    color: color-mix(in srgb, var(--accent) 50%, var(--text-muted));
+  }
+}
+
+/* --- Search above the tree, outside its scroll container (overrides/main.html) --- */
+/* Same left and right edges as the tree's highlighted items; the cards' surface. */
+.lw-tree-search { padding: 0 0.8rem 0.8rem 0.2rem; }
+.lw-tree-search .md-search { display: block; padding: 0; }
+.lw-tree-search .md-search__button {
+  width: 100%;
+  height: 34px;
+  font-size: 13px;
+  color: var(--text-muted);
+  background-color: var(--bg-raised);
+  border: 1px solid var(--edge-raised);
+  border-radius: 8px;
+}
+@media (hover: none) {
+  .lw-tree-search .md-search__button::after { display: none; }
+}
+
+/* The tree's scroll pane: a thin edge above and below marks where it starts and ends, so a
+   clipped tree reads as scrollable. Only where the tree is a sidebar column, not the drawer. */
+@media screen and (min-width: 76.25em) {
+  /* Same side insets as the search box above, so the edges line up with it */
+  .md-sidebar--primary .md-sidebar__scrollwrap {
+    margin: 0 0.8rem 0 0.2rem;
+    border-top: 1px solid var(--edge-raised);
+    border-bottom: 1px solid var(--edge-raised);
+  }
+  .md-sidebar--primary .md-sidebar__inner { padding: 8px 0; }
+}
+
+/* --- Header: the main site's nav (nav.css) inside the theme's sticky header --- */
+:root { --lw-nav-h: 57px; --lw-docbar-h: 0px; }
+/* The main site reserves no scrollbar gutter; reserving one here shifts the centered nav. */
+html { scrollbar-gutter: auto; }
+/* The nav paints its own background, blur and bottom edge. */
+.lw-header {
+  background: transparent;
+  box-shadow: none;
+}
+/* nav.css fixes the nav to the viewport; here the theme's header is the sticky element. */
+.lw-header .site-nav { position: relative; }
+
+/* Width, padding and the theme switch's place are nav.css's, as on the main site: a 1080px
+   container and the switch fixed to the viewport's right edge. */
+@media (max-width: 768px) {
+  :root { --lw-nav-h: 85px; }
+}
+
+/* The docs drawer gets its own bar under the nav while the tree is hidden; it continues the
+   nav's surface. */
+.lw-docbar { display: none; }
+@media screen and (max-width: 76.234375em) {
+  :root { --lw-docbar-h: 41px; }
+  .lw-docbar {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    padding: 0 16px;
+    /* Without color-mix(), opaque */
+    background: var(--bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  @supports (color: color-mix(in srgb, red 50%, blue)) {
+    .lw-docbar { background: color-mix(in srgb, var(--bg) 85%, transparent); }
+  }
+  .lw-docbar__menu {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .lw-docbar__menu svg { width: 20px; height: 20px; fill: currentColor; }
+  /* Search on the right of the bar (search-open.js opens it) */
+  .lw-docbar__search {
+    display: flex;
+    margin-left: auto;
+    padding: 4px;
+    color: var(--text-muted);
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+  .lw-docbar__search:hover { color: var(--text); }
+  .lw-docbar__search svg { width: 20px; height: 20px; }
+  /* In the drawer the theme lays the tree's scroll pane over the whole drawer (absolute, top 0),
+     which would cover the search above it; the bar's search takes its place */
+  .lw-tree-search { display: none; }
+  /* The drawer starts under the nav and the bar (.md-sidebar's top, below), so it is shorter by
+     that much than the theme's full-height card; the theme's .4rem inset stays at the bottom */
+  .md-sidebar--primary {
+    height: calc(100% - var(--lw-nav-h) - var(--lw-docbar-h) - .4rem);
+  }
+}
+
+/* --- Layout: the content has the nav's width, the tree and "On this page" sit beside it --- */
+/* The page is tree | content | outline, centered. Capped at the nav container's 1080px plus the
+   two 12.1rem (242px) sidebars, the content column lands exactly under the nav's container on a
+   wide window, its text starting at the logo; on a narrower one the content gives up the width
+   and the sidebars keep theirs. Pages without an outline keep its column, so their content stays
+   under the nav too. A 16px margin keeps the sidebars off the window's edges when the window is
+   narrower; it is symmetric, so it does not move the content. Only where the tree is a sidebar
+   column, not the drawer. */
+/* Each sidebar takes half of what the 1080px content leaves of the grid, from the theme's 12.1rem
+   (242px) up to 320px; the content takes the rest. So the sidebars narrow first, and the content
+   gives up width only once both are at 242px. Both always have the same width, which keeps the
+   content centered. A flex item's percentage width resolves against the grid's own width, so the
+   window's scrollbar does not enter into it. */
+@media screen and (min-width: 76.25em) {
+  .md-main__inner.md-grid {
+    max-width: calc(var(--lw-container) + 2 * 320px + 2 * 16px);
+    padding: 0 16px;
+  }
+  .md-sidebar--primary,
+  .md-sidebar--secondary {
+    flex-shrink: 0;
+    width: clamp(12.1rem, (100% - var(--lw-container)) / 2, 320px);
+  }
+  /* The theme pads the outline to a fixed 11.5rem whatever its column's width; let it fill */
+  .md-sidebar--secondary .md-sidebar__inner { padding-right: 0; }
+  .md-sidebar--secondary[hidden] {
+    display: block;
+    visibility: hidden;
+  }
+}
+
+/* Space between the nav and the page body. The theme's 1.5rem margin above the body put the
+   first content ~50px below the nav, and any margin there lets the sticky sidebars slide by its
+   height at the top of a page (the theme's script sticks them right under the header, as an
+   inline style). So the body starts at the nav, and the gap is padding inside the sidebars and
+   the content, on top of the theme's own (1.1rem and .7rem). */
+:root { --lw-main-gap: 8px; }
+.md-main__inner { margin-top: 0; }
+.md-content__inner { padding-top: calc(0.7rem + var(--lw-main-gap)); }
+@media screen and (min-width: 60em) {
+  .md-sidebar--secondary { padding-top: calc(1.1rem + var(--lw-main-gap)); }
+}
+@media screen and (min-width: 76.25em) {
+  .md-sidebar--primary { padding-top: calc(1.1rem + var(--lw-main-gap)); }
+}
+.md-sidebar { top: calc(var(--lw-nav-h) + var(--lw-docbar-h)); }
+
+/* --- Footer: the main site's (styles.css footer), one row on the page background --- */
+/* The same height as the nav: its container's 56px with 8px padding, plus the 1px border */
+.lw-footer {
+  padding: 0;
+  font-family: var(--sans);
+  /* The main site's body line-height */
+  line-height: 1.6;
+  color: var(--text-muted);
+  background: transparent;
+  border-top: 1px solid var(--edge-raised);
+}
+/* The main site's footer container: 1080px wide, 24px side padding, the same edges as the nav */
+.lw-footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: var(--lw-container);
+  min-height: 56px;
+  margin: 0 auto;
+  padding: 8px 24px;
+  font-size: 13px;
+}
+.lw-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.lw-footer a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.lw-footer a:hover { color: var(--text); }
