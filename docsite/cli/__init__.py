@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: MIT
 # SPDX-FileCopyrightText: Copyright 2026 The llm-works-docs Authors
 
-"""Site-wide constants shared by the build steps."""
+"""Command-line interface: `python -m docsite <step>`."""
 
-SITE_URL = "https://docs.llm-works.ai/"
+from .cli import main
+
+__all__ = ["main"]

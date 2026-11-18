@@ -19,7 +19,10 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
 ]
-dependencies = []
+dependencies = [
+    # validation: pydantic, for the build config models
+    "appinfra[validation]>=0.14.0",
+]
 
 [project.optional-dependencies]
 dev = [
