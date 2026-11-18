@@ -6,9 +6,9 @@
 //
 // A section opens or closes on its own page, by its toggle. The sections a page opens because it
 // lies inside them count as opened too. A click on a section's row that opens its page and
-// flips it (tree-toggle.js) asks for that state with window.lwTreeOpen(id, open): the next
-// page's tree gets it, even where that page would open the section itself (it is the section's
-// own page).
+// flips it (tree-toggle.js) asks for that state with window.lwTreeOpen(id, open, href): the
+// tree of the page at `href` gets it, even where that page would open the section itself (it is
+// the section's own page), however long the page takes to arrive.
 //
 // The new tree is reopened in a mutation callback, before the browser paints it. The theme may
 // already have computed its styles by then (with those sections closed), so reopening would play
@@ -18,11 +18,9 @@
 (function () {
   var KEY = "lw-tree-open";
   var TOGGLE = ".md-nav--primary .md-nav__toggle[id]";
-  // A request is for the page change its click starts; one that never comes must not linger
-  var REQUEST_MS = 3000;
   var open = load();
   var tree = null;
-  var request = null; // {id, open, at}: the state the next tree gives section `id`
+  var request = null; // {id, open, path}: the state the tree of page `path` gives section `id`
 
   function load() {
     try {
@@ -43,7 +41,9 @@
   // Give a new tree the remembered sections and the requested state; remember the sections it
   // opened itself.
   function sync(nav) {
-    var asked = request && Date.now() - request.at < REQUEST_MS ? request : null;
+    // A request is for the page its click opens. Any other page's tree drops it: another click
+    // came first, or the click opened no page.
+    var asked = request && request.path === location.pathname ? request : null;
     request = null;
     var changed = [];
     nav.querySelectorAll(".md-nav__toggle[id]").forEach(function (toggle) {
@@ -65,11 +65,11 @@
     }
   }
 
-  window.lwTreeOpen = function (id, isOpen) {
+  window.lwTreeOpen = function (id, isOpen, href) {
     if (isOpen) open.add(id);
     else open.delete(id);
     save();
-    request = { id: id, open: isOpen, at: Date.now() };
+    request = { id: id, open: isOpen, path: new URL(href, location.href).pathname };
   };
 
   function check() {

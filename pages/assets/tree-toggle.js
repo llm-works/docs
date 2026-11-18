@@ -8,6 +8,8 @@
   var ROW = ".md-nav--primary .md-nav__container";
 
   document.addEventListener("click", function (e) {
+    // Clicks with a modifier key (new tab or window) or another button stay the browser's
+    if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
     var row = e.target && e.target.closest ? e.target.closest(ROW) : null;
     if (!row) return;
     var link = row.querySelector(":scope > a.md-nav__link[href]");
@@ -22,7 +24,7 @@
       toggle.dispatchEvent(new Event("change", { bubbles: true }));
       return;
     }
-    if (window.lwTreeOpen) window.lwTreeOpen(toggle.id, isOpen);
+    if (window.lwTreeOpen) window.lwTreeOpen(toggle.id, isOpen, link.href);
     if (e.target.closest("a") !== link) {
       e.preventDefault();
       e.stopPropagation();
