@@ -69,10 +69,11 @@ class Build:
         checkout = self._cfg.site.build_dir / pkg.name
         files = stager.files(pkg, checkout)
         merge(plan, {f"{pkg.name}/{path}": src for path, src in files.items()}, pkg.name)
-        if pkg.reference is not None:
-            pages = reference_pages(pkg, reference_modules(checkout, pkg.reference))
+        modules = self._reference_modules(pkg)
+        if modules is not None:
+            pages = reference_pages(pkg, modules)
             merge(plan, {f"{pkg.name}/{rel}": text for rel, text in pages.items()}, pkg.name)
-        _, sections = self._package_tree(pkg)
+        _, sections = _package_tree(pkg, modules)
         merge(plan, _section_pages(pkg.name, sections, plan), pkg.name)
 
     def nav(self) -> Path:
@@ -90,7 +91,10 @@ class Build:
         """Write the Zensical config: the base config with each package's docs in the nav."""
         site = self._cfg.site
         base = tomllib.loads(site.zensical_base.read_text(encoding="utf-8"))
-        trees = {pkg.name: self._package_tree(pkg)[0] for pkg in self._cfg.packages}
+        trees = {
+            pkg.name: _package_tree(pkg, self._reference_modules(pkg))[0]
+            for pkg in self._cfg.packages
+        }
         sources = [
             (site.build_dir / pkg.name / pkg.reference.source).as_posix()
             for pkg in self._cfg.packages
@@ -108,17 +112,11 @@ class Build:
         self.nav()
         self.site_config()
 
-    def _package_tree(self, pkg: Package) -> tuple[list[NavItem], dict[str, SectionIndex]]:
-        """The package's nav and the section pages it needs generated.
-
-        The nav is the configured docs tree, then the generated reference, with a generated page
-        first in each section that has none, so that every item in the tree opens a page.
-        """
-        checkout = self._cfg.site.build_dir / pkg.name
-        tree = package_nav(pkg)
-        if pkg.reference is not None:
-            tree.append(reference_nav(reference_modules(checkout, pkg.reference)))
-        return index_sections(tree)
+    def _reference_modules(self, pkg: Package) -> list[str] | None:
+        """The modules of the package's API reference; None when it has no reference."""
+        if pkg.reference is None:
+            return None
+        return reference_modules(self._cfg.site.build_dir / pkg.name, pkg.reference)
 
     @property
     def _nav_source(self) -> Path:
@@ -129,6 +127,21 @@ class Build:
     def _brand_files(self) -> dict[str, str]:
         """File name -> URL of each brand stylesheet; the names are what the site config loads."""
         return {"tokens.css": self._cfg.brand.tokens_url, "nav.css": self._cfg.brand.nav_css_url}
+
+
+def _package_tree(
+    pkg: Package, modules: list[str] | None
+) -> tuple[list[NavItem], dict[str, SectionIndex]]:
+    """The package's nav and the section pages it needs generated.
+
+    The nav is the configured docs tree, then the API reference of `modules` (None: the package
+    has none), with a generated page first in each section that has none, so that every item in
+    the tree opens a page.
+    """
+    tree = package_nav(pkg)
+    if modules is not None:
+        tree.append(reference_nav(modules))
+    return index_sections(tree)
 
 
 def _section_pages(

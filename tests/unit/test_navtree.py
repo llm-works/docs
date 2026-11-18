@@ -86,6 +86,9 @@ def test_render_section_index_links_each_entry() -> None:
         ("---\ntitle: 'From front'\n---\n# Heading\n", "From front"),
         ("---\nkeywords: [a]\n---\n\n# Heading #\n", "Heading"),
         ("```\n# not a title\n```\n# Real\n", "Real"),
+        # A fence closes only on its own character, at least as long as it opened
+        ("~~~\n```\n# not a title\n~~~\n# Real\n", "Real"),
+        ("````\n```\n# not a title\n```\n````\n# Real\n", "Real"),
         ("## Only a subheading\n", "Getting started"),
     ],
 )
