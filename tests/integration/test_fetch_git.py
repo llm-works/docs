@@ -58,6 +58,7 @@ def test_branch_sharing_the_tag_name_is_rejected(
     git(package_repo, "branch", TAG)
     with pytest.raises(FetchError, match=f"not at tag {TAG}"):
         PackageFetcher(lg, tmp_path / "build").fetch(_package(package_repo))
+    assert not (tmp_path / "build" / "pkg").exists()
 
 
 def test_branch_sharing_the_tag_name_is_rejected_in_a_full_clone(
@@ -71,6 +72,7 @@ def test_branch_sharing_the_tag_name_is_rejected_in_a_full_clone(
     with pytest.raises(FetchError, match=f"not at tag {TAG}") as raised:
         PackageFetcher(lg, tmp_path / "build").fetch(pkg)
     assert raised.value.__cause__ is None
+    assert not (tmp_path / "build" / "pkg").exists()
 
 
 def test_annotated_tag_is_accepted(lg: Logger, package_repo: Path, tmp_path: Path) -> None:
@@ -86,3 +88,4 @@ def test_branch_name_is_not_accepted_as_a_pin(
     """git clone --branch takes branches too; only a release tag is a valid pin."""
     with pytest.raises(FetchError, match="pkg: checkout is not at tag rel"):
         PackageFetcher(lg, tmp_path / "build").fetch(_package(package_repo, "rel"))
+    assert not (tmp_path / "build" / "pkg").exists()

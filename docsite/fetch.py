@@ -38,7 +38,12 @@ class PackageFetcher:
             "-c", "advice.detachedHead=false", "clone", "--quiet", "--depth", "1",
             "--branch", pkg.tag, "--", pkg.repo, str(dest),
         )  # fmt: skip
-        _check_pin(dest, pkg)
+        try:
+            _check_pin(dest, pkg)
+        except FetchError:
+            # A later stage step must not find the rejected checkout.
+            shutil.rmtree(dest)
+            raise
         self._lg.info("package fetched", extra={"package": pkg.name, "tag": pkg.tag})
         return dest
 
