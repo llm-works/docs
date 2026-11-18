@@ -213,7 +213,14 @@ html { font-size: 20px; }
 .md-nav--primary .md-nav__container:has(> a.lw-tree-prev) > .md-nav__link {
   /* Without color-mix(), the current page's blue */
   color: var(--accent);
-  color: color-mix(in srgb, var(--accent) 50%, var(--text-muted));
+}
+/* In @supports: a value with var() that fails only when computed makes the property unset, not
+   the declaration before it */
+@supports (color: color-mix(in srgb, red 50%, blue)) {
+  .md-nav--primary a.md-nav__link.lw-tree-prev:not(.md-nav__link--active),
+  .md-nav--primary .md-nav__container:has(> a.lw-tree-prev) > .md-nav__link {
+    color: color-mix(in srgb, var(--accent) 50%, var(--text-muted));
+  }
 }
 
 /* --- Search above the tree, outside its scroll container (overrides/main.html) --- */
@@ -275,10 +282,12 @@ html { scrollbar-gutter: auto; }
     padding: 0 16px;
     /* Without color-mix(), opaque */
     background: var(--bg);
-    background: color-mix(in srgb, var(--bg) 85%, transparent);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
+  }
+  @supports (color: color-mix(in srgb, red 50%, blue)) {
+    .lw-docbar { background: color-mix(in srgb, var(--bg) 85%, transparent); }
   }
   .lw-docbar__menu {
     display: flex;
@@ -304,6 +313,11 @@ html { scrollbar-gutter: auto; }
   /* In the drawer the theme lays the tree's scroll pane over the whole drawer (absolute, top 0),
      which would cover the search above it; the bar's search takes its place */
   .lw-tree-search { display: none; }
+  /* The drawer starts under the nav and the bar (.md-sidebar's top, below), so it is shorter by
+     that much than the theme's full-height card; the theme's .4rem inset stays at the bottom */
+  .md-sidebar--primary {
+    height: calc(100% - var(--lw-nav-h) - var(--lw-docbar-h) - .4rem);
+  }
 }
 
 /* --- Layout: the content has the nav's width, the tree and "On this page" sit beside it --- */
