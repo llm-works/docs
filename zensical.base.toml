@@ -44,14 +44,15 @@ nav = [
   ] },
   # The section's own index page first: without one, navigation.indexes takes a package's
   # landing page as the section page and drops it from the tree. Then one entry per package,
-  # by its landing page in pages/<name>/index.md.
+  # by its landing page in pages/<name>/index.md, from the one closest to the user (agents) down
+  # to the foundation, the same order as the cards on the home and Packages pages.
   { "Packages" = [
     "packages/index.md",
-    { "appinfra" = "appinfra/index.md" },
-    { "llm-infer" = "llm-infer/index.md" },
-    { "llm-saia" = "llm-saia/index.md" },
-    { "llm-kelt" = "llm-kelt/index.md" },
     { "llm-gent" = "llm-gent/index.md" },
+    { "llm-kelt" = "llm-kelt/index.md" },
+    { "llm-saia" = "llm-saia/index.md" },
+    { "llm-infer" = "llm-infer/index.md" },
+    { "appinfra" = "appinfra/index.md" },
   ] },
 ]
 
