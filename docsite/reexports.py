@@ -38,7 +38,9 @@ class Exports(Extension):
     def on_package(self, *, pkg: Module, loader: GriffeLoader, **kwargs: Any) -> None:
         """Rewrite every package of the loaded package."""
         for package in _packages(pkg):
-            rows = [_row(name, *place) for name, place in _take_exports(package)]
+            # Alphabetical, as mkdocstrings orders the members (zensical.base.toml)
+            taken = sorted(_take_exports(package), key=lambda item: item[0])
+            rows = [_row(name, *place) for name, place in taken]
             if rows:
                 _append(package, _HEADER + "\n".join(rows), loader)
 
