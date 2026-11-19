@@ -41,14 +41,16 @@ brand:
 # Packages by name. Each is fetched at its git `ref`: a release tag for the published site; for a
 # preview, a branch or <branch>@<commit> (pushed), set in a gitignored Makefile.local as
 # `serve: export INFRA_PACKAGES_<NAME>_REF := develop@9843ff` (NAME upper-cased, - as _).
-# `docs_root` is its docs directory in the repo (default: docs). The package's docs are the source and are published as they are; the
-# arrangement is the site's. `docs` is the package's tree in the site nav and its allowlist at
-# once: only the files it lists are published, in that order. An entry is a path (titled by the
-# page's heading), {Title: path}, or {Section: [entries]}. No wildcards: a new file must be
-# listed to ship. `rename` stages a file under another name. `reference` adds an API reference
-# generated from the package's docstrings. Each package also needs a landing page,
-# pages/<name>/index.md, and an entry {<name>: <name>/index.md} under Packages in
-# zensical.base.toml.
+# `docs_root` is its docs directory in the repo (default: docs). The package's docs are the source
+# and are published as they are; the arrangement is the site's. `docs` is the package's tree in
+# the site nav and its allowlist at once: only the files it lists are published, in that order.
+# An entry is a path (titled by the page's heading), {Title: path}, or {Section: [entries]}. A
+# file that is not a page, such as an image a page shows, is published but stays out of the nav.
+# No wildcards: a new file must be listed to ship. `rename` stages a file under another name.
+# `reference` adds an API reference generated from the package's docstrings; its `exclude` lists
+# subpackages to leave out, as dotted paths relative to the package (default: [examples]). Each
+# package also needs a landing page, pages/<name>/index.md, and an entry
+# {<name>: <name>/index.md} under Packages in zensical.base.toml.
 packages:
   appinfra:
     repo: https://github.com/llm-works/appinfra.git
@@ -115,3 +117,64 @@ packages:
       - Security policy: SECURITY.md
       # The docs are published under appinfra's licence (Apache 2.0), which ships with them
       - License: LICENSE
+
+  llm-infer:
+    repo: https://github.com/llm-works/llm-infer.git
+    ref: v0.9.0
+    reference:
+      package: llm_infer
+    docs:
+      - usage.md
+      - client.md
+      - config.md
+      - engines.md
+      - adapters.md
+      - architecture.md
+      - api.md
+      - known-issues.md
+
+  llm-saia:
+    repo: https://github.com/llm-works/llm-saia.git
+    ref: v0.6.3
+    reference:
+      package: llm_saia
+    docs:
+      - INTRO.md
+      - pydantic.md
+      - custom-verbs.md
+      - backend.md
+      - tool-gates.md
+      - production.md
+      - demo/demo.gif
+
+  llm-kelt:
+    repo: https://github.com/llm-works/llm-kelt.git
+    ref: v0.5.1
+    # Zensical takes a README.md as the folder's index, which is the landing page here
+    rename:
+      README.md: overview.md
+    reference:
+      package: llm_kelt
+    docs:
+      - README.md
+      - quickstart.md
+      - concepts.md
+      - atomic-memory.md
+      - knowledge-graph.md
+      - context-and-rag.md
+      - conversation.md
+      - multi-schema.md
+      - training.md
+      - cli.md
+      - glossary.md
+
+  llm-gent:
+    repo: https://github.com/llm-works/llm-gent.git
+    ref: v0.4.1
+    # index.md is the landing page here (pages/llm-gent/index.md)
+    rename:
+      index.md: guide.md
+    reference:
+      package: llm_gent
+    docs:
+      - index.md

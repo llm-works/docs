@@ -69,12 +69,15 @@ NavItem = str | dict[str, Any]
 
 
 class Reference(_Frozen):
-    """A generated API reference: one page per top-level module of `package`, with submodules."""
+    """A generated API reference: one page per package and subpackage of `package`."""
 
     # The import name, e.g. appinfra or llm_saia
     package: str
     # The checkout directory that holds the package directory
     source: str = "."
+    # Subpackages left out of the reference with everything under them, as dotted paths relative
+    # to the package (examples, cli.tools). The packages ship their runnable examples as one.
+    exclude: tuple[str, ...] = ("examples",)
 
 
 class Package(_Frozen):

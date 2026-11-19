@@ -26,6 +26,15 @@ def test_package_nav_applies_renames_at_any_depth() -> None:
     assert package_nav(pkg) == [{"Guide": "guide.md"}, {"Sub": ["sub/overview.md", "sub/x.md"]}]
 
 
+def test_package_nav_leaves_out_files_that_are_not_pages() -> None:
+    """An image a page shows is published with the docs but has no place in the nav; a
+    plain-text file staged as .md (LICENSE as license.md) is a page and keeps its place."""
+    docs = ["intro.md", "demo/demo.gif", {"Media": ["img/a.png"]}, {"License": "LICENSE"}]
+    packages = {"pkg": package_dict(docs=docs, rename={"LICENSE": "license.md"})}
+    pkg = load_build_config(build_dict(packages=packages)).packages[0]
+    assert package_nav(pkg) == ["intro.md", {"License": "license.md"}]
+
+
 def test_index_sections_adds_a_page_to_sections_without_one() -> None:
     """A section gets a generated page first, at its titles slugged; nested sections too."""
     tree = ["intro.md", {"Guides": [{"Dev tooling": ["g/a.md"]}, {"B": "g/b.md"}]}]
