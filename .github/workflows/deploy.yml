@@ -7,9 +7,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# One deploy at a time; a running deploy finishes before the next starts.
+# One run per ref at a time; a running deploy finishes before the next starts. Per ref, so a
+# manual build of another branch cannot replace a main run waiting in the queue.
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: false
 
 permissions: {}
