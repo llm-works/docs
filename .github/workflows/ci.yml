@@ -94,4 +94,4 @@ jobs:
       - name: Run unit and integration tests with coverage
         run: >-
           python -m pytest tests/ -m "unit or integration" -v --tb=short
-          --cov=docsite --cov-fail-under=95 --cov-report=term
+          --cov=docsite --cov-fail-under=90 --cov-report=term

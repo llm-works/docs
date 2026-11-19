@@ -33,6 +33,7 @@ _REFDEF = re.compile(r"^(\s{0,3}\[[^\]]+\]:[ \t]*)(<[^>\n]*>|\S+)")
 # An inline code span: a run of backticks to the next run of the same length
 _CODE_SPAN = re.compile(r"(`+).+?(?<!`)\1(?!`)")
 _SCHEME = re.compile(r"[a-zA-Z][a-zA-Z0-9+.-]*:")
+_IMAGES = (".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp")
 
 
 def blob_base(repo: str, ref: str) -> str | None:
@@ -91,7 +92,9 @@ class RepoLinks:
         inside = path == self.docs_root or path.startswith(self.docs_root + "/")
         if inside or path.startswith("../") or path == ".." or path not in self.paths:
             return None
-        return f"{self.base}/{quote(path)}{raw[cut:]}"
+        # A blob URL is GitHub's page for the file; ?raw=true redirects to the image itself
+        raw_query = "?raw=true" if path.lower().endswith(_IMAGES) else ""
+        return f"{self.base}/{quote(path)}{raw_query}{raw[cut:]}"
 
 
 def link_to_repo(

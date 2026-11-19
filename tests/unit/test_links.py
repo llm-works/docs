@@ -15,6 +15,7 @@ PATHS = frozenset(
         "CHANGELOG.md",
         "examples",
         "examples/demo.py",
+        "examples/demo.png",
         "pkg",
         "pkg/docs",
         "pkg/docs/a.md",
@@ -34,6 +35,8 @@ def _rewrite(text: str) -> tuple[str, int]:
         ("See [it](../../../README.md#install).", f"See [it]({BASE}/README.md#install)."),
         # Image, and a directory (GitHub redirects a blob URL of a directory to its tree)
         ("![d](../../../examples/)", f"![d]({BASE}/examples)"),
+        # An image file: the raw file, not GitHub's page for it
+        ("![d](../../../examples/demo.png)", f"![d]({BASE}/examples/demo.png?raw=true)"),
         # Reference definition
         ("[readme]: ../../../README.md", f"[readme]: {BASE}/README.md"),
     ],
