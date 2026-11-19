@@ -1,0 +1,2 @@
+{% extends "_base/class.html.jinja" %}
+{% block labels scoped %}{{ super() }}{% with obj = class %}{% include "_import.html.jinja" %}{% endwith %}{% endblock labels %}

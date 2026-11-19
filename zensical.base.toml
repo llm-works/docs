@@ -44,14 +44,15 @@ nav = [
   ] },
   # The section's own index page first: without one, navigation.indexes takes a package's
   # landing page as the section page and drops it from the tree. Then one entry per package,
-  # by its landing page in pages/<name>/index.md.
+  # by its landing page in pages/<name>/index.md, from the one closest to the user (agents) down
+  # to the foundation, the same order as the cards on the home and Packages pages.
   { "Packages" = [
     "packages/index.md",
-    { "appinfra" = "appinfra/index.md" },
-    { "llm-infer" = "llm-infer/index.md" },
-    { "llm-saia" = "llm-saia/index.md" },
-    { "llm-kelt" = "llm-kelt/index.md" },
     { "llm-gent" = "llm-gent/index.md" },
+    { "llm-kelt" = "llm-kelt/index.md" },
+    { "llm-saia" = "llm-saia/index.md" },
+    { "llm-infer" = "llm-infer/index.md" },
+    { "appinfra" = "appinfra/index.md" },
   ] },
 ]
 
@@ -94,12 +95,21 @@ link = "https://www.llm-works.ai/terms/"
 
 # Generated API reference. `python -m docsite config` adds handlers.python.paths: the checkouts of
 # the packages that have a reference.
+[project.plugins.mkdocstrings]
+# Template overrides: each package-level object's heading shows its import line
+custom_templates = "overrides/mkdocstrings"
+
 [project.plugins.mkdocstrings.handlers.python.options]
 # Fences the indented example code that docstrings put under titles like "Example:"
-extensions = ["docsite/docstring_code.py:CodeBlocks"]
+# and lists a package's re-exported names, linked, instead of documenting them a second time
+extensions = ["docsite/docstring_code.py:CodeBlocks", "docsite/reexports.py:Exports"]
 docstring_style = "google"
 members_order = "source"
-show_submodules = true
+# Each package has its own page (docsite/reference.py), so a page holds only its own members
+show_submodules = false
+# Private and special (dunder) members stay out of the reference; merge_init_into_class keeps
+# each class's constructor
+filters = ["!^_"]
 show_root_heading = false
 show_source = false
 show_signature_annotations = true

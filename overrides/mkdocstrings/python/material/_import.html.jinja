@@ -1,0 +1,12 @@
+{#- The import line of a package-level object, at the right of its heading: shown as a console
+line (>>>) like the docstrings' examples, highlighted, with the theme's copy button, which copies
+the line without the prompt (its clipboard handler copies a button's data-clipboard-text). The page
+documents the object under the package that exports it, so that package is where it is imported
+from. Members of classes have none. -#}
+{% if obj.parent and obj.parent.is_module %}
+  {% set line = "from " ~ obj.parent.path ~ " import " ~ obj.name %}
+  <span class="doc-import">
+    {%- filter highlight(language="pycon", inline=True) %}>>> {{ line }}{% endfilter -%}
+    <nav class="md-code__nav"><button class="md-code__button" title="Copy to clipboard" data-clipboard-text="{{ line }}" data-md-type="copy"></button></nav>
+  </span>
+{% endif %}

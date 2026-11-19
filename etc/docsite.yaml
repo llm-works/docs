@@ -59,7 +59,7 @@ packages:
       README.md: user-guide.md
       # A plain-text file renamed to .md is published as a page, its text in a code block
       LICENSE: license.md
-    # Generated from the docstrings at the ref: one page per top-level module of appinfra/
+    # Generated from the docstrings at the ref: one page per package and subpackage of appinfra/
     reference:
       package: appinfra
     # Not listed: index.md, the `appinfra docs` CLI's navigation page (the landing page here is

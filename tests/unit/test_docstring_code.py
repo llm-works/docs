@@ -15,17 +15,31 @@ def _doc(*lines: str) -> str:
     return "\n".join(lines)
 
 
-def test_example_block_becomes_a_python_fence() -> None:
-    """Indented code under Example: keeps its lines, inside a python fence."""
-    text = _doc("Summary.", "", "Example:", "    app = App()", "    # comment", "    app.run()")
+def test_example_code_becomes_a_session() -> None:
+    """Indented code under Example: is fenced as a session: >>> opens each statement and
+    comment, ... continues a statement, decorators included."""
+    text = _doc(
+        "Summary.",
+        "",
+        "Example:",
+        "    app = App()",
+        "    # comment",
+        "    @app.tool()",
+        "    def run():",
+        "",
+        "        pass",
+    )
     assert fence_code_blocks(text) == _doc(
         "Summary.",
         "",
         "Example:",
-        "    ```python",
-        "    app = App()",
-        "    # comment",
-        "    app.run()",
+        "    ```pycon",
+        "    >>> app = App()",
+        "    >>> # comment",
+        "    >>> @app.tool()",
+        "    ... def run():",
+        "    ...",
+        "    ...     pass",
         "    ```",
     )
 
@@ -56,4 +70,4 @@ def test_extension_rewrites_the_object_docstring() -> None:
     """The griffe hook replaces the docstring text before it is parsed."""
     obj = SimpleNamespace(docstring=SimpleNamespace(value=_doc("Example:", "    x = 1")))
     CodeBlocks().on_instance(obj=cast(Any, obj))
-    assert "```python" in obj.docstring.value
+    assert "```pycon" in obj.docstring.value
