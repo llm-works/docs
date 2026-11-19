@@ -19,11 +19,10 @@ def lg() -> Logger:
 
 
 def package_dict(**overrides: Any) -> dict[str, Any]:
-    """A valid `packages` entry, with fields replaced by `overrides`."""
+    """A valid `packages` entry's settings, with fields replaced by `overrides`."""
     pkg: dict[str, Any] = {
-        "name": "llm-saia",
         "repo": "https://github.com/llm-works/llm-saia.git",
-        "tag": "v0.6.3",
+        "ref": "v0.6.3",
         "docs": ["INTRO.md", "demo/demo.gif"],
     }
     pkg.update(overrides)
@@ -43,14 +42,13 @@ def build_dict(**overrides: Any) -> dict[str, Any]:
         "nav": {
             "url": "https://www.llm-works.ai/partials/nav.html",
             "site_origin": "https://www.llm-works.ai",
-            "docs_origin": "https://docs.llm-works.ai",
             "output": "overrides/partials/site-nav.html",
         },
         "brand": {
             "tokens_url": "https://www.llm-works.ai/partials/tokens.css",
             "nav_css_url": "https://www.llm-works.ai/partials/nav.css",
         },
-        "packages": [package_dict()],
+        "packages": {"llm-saia": package_dict()},
     }
     cfg.update(overrides)
     return cfg

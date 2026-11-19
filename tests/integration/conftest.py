@@ -33,7 +33,7 @@ def git(cwd: Path, *args: str) -> None:
 
 @pytest.fixture
 def package_repo(tmp_path: Path) -> Path:
-    """A repo with docs/ and a package committed and tagged TAG, plus a branch named `rel`."""
+    """A repo with docs/ and a package committed on main and tagged TAG."""
     repo = tmp_path / "pkg-repo"
     files = {f"docs/{rel}": text for rel, text in DOCS.items()} | SOURCE
     for rel, text in files.items():
@@ -44,5 +44,4 @@ def package_repo(tmp_path: Path) -> Path:
     git(repo, "add", ".")
     git(repo, "commit", "--quiet", "-m", "docs")
     git(repo, "tag", TAG)
-    git(repo, "branch", "rel")
     return repo

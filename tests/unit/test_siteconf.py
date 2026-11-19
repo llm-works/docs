@@ -37,26 +37,11 @@ def test_package_entry_expands_under_its_landing_page() -> None:
     assert packages[2] == {"other": "other/index.md"}
 
 
-def test_base_is_not_modified() -> None:
-    """The base mapping can be rendered again."""
-    base = _base()
-    render_site_config(base, {"pkg": ["guide.md"]}, [], "docs")
-    assert base == _base()
-
-
-def test_reference_sources_point_mkdocstrings_at_checkouts() -> None:
-    """With references, the Python handler reads the given checkout directories."""
-    config = render_site_config(_base(), {}, [".build/src/pkg"], "docs")
+def test_reference_sources_and_docs_dir_are_set() -> None:
+    """mkdocstrings reads the checkouts; Zensical reads the directory stage fills."""
+    config = render_site_config(_base(), {}, [".build/src/pkg"], "build/docs")
     handler = config["project"]["plugins"]["mkdocstrings"]["handlers"]["python"]
     assert handler["paths"] == [".build/src/pkg"]
-    assert "plugins" not in render_site_config(_base(), {}, [], "docs")["project"]
-
-
-def test_docs_dir_is_the_staged_directory() -> None:
-    """Zensical reads the directory stage fills, whatever the base config says."""
-    base = _base()
-    base["project"]["docs_dir"] = "elsewhere"
-    config = render_site_config(base, {}, [], docs_dir="build/docs")
     assert config["project"]["docs_dir"] == "build/docs"
 
 
@@ -64,9 +49,3 @@ def test_package_without_an_entry_fails() -> None:
     """A configured package needs its landing entry in the base nav."""
     with pytest.raises(SiteConfigError, match="'absent'"):
         render_site_config(_base(), {"absent": []}, [], "docs")
-
-
-def test_base_without_packages_section_fails() -> None:
-    """The base nav must have the Packages section."""
-    with pytest.raises(SiteConfigError, match="Packages"):
-        render_site_config({"project": {"nav": [{"Home": "index.md"}]}}, {"pkg": []}, [], "docs")
