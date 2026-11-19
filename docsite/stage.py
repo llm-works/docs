@@ -5,7 +5,7 @@
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 
 from appinfra.log import Logger
 
@@ -46,24 +46,17 @@ class DocsStager:
         self._lg = lg
 
     def files(self, pkg: Package, checkout: Path) -> dict[str, Path]:
-        """Site path (renames applied) -> source file; fail on a missing file or a symlink."""
-        source = _docs_source(pkg, checkout)
+        """Site path (renames applied) -> source file; fail on a missing file."""
+        source = checkout / pkg.docs_root
         sel = select(_list_files(source), pkg.files)
         if sel.missing:
-            raise StageError(f"{pkg.name} {pkg.tag}: allowlisted docs missing: {list(sel.missing)}")
+            raise StageError(f"{pkg.name} {pkg.ref}: allowlisted docs missing: {list(sel.missing)}")
         if sel.unlisted:
             self._lg.info(
                 "docs not in allowlist, skipped",
                 extra={"package": pkg.name, "files": list(sel.unlisted)},
             )
-        files = {}
-        for path in sel.copy:
-            src = source / path
-            # A symlink could pull content from outside the docs root.
-            if src.is_symlink():
-                raise StageError(f"{pkg.name}: allowlisted docs path {path!r} is a symlink")
-            files[pkg.site_path(path)] = src
-        return files
+        return {pkg.site_path(path): source / path for path in sel.copy}
 
 
 def merge(plan: dict[str, Source], files: Mapping[str, Source], owner: str) -> None:
@@ -104,17 +97,6 @@ def _remove_extras(root: Path, keep: set[str]) -> int:
         elif path.is_dir() and not any(path.iterdir()):
             path.rmdir()
     return removed
-
-
-def _docs_source(pkg: Package, checkout: Path) -> Path:
-    """The package's docs directory; no part of its path may be a symlink."""
-    path = checkout
-    for part in PurePosixPath(pkg.docs_root).parts:
-        path = path / part
-        # rglob follows a symlinked directory, which would list files from wherever it points.
-        if path.is_symlink():
-            raise StageError(f"{pkg.name} {pkg.tag}: {pkg.docs_root}/ has a symlink in its path")
-    return path
 
 
 def _list_files(root: Path) -> list[str]:

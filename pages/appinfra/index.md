@@ -3,6 +3,9 @@ hide:
   - toc
 ---
 
+<!-- The #guides and #api-reference ids on the cards are where appinfra's own docs link to
+     (index.md#guides, index.md#api-reference): their index.md is replaced by this page. -->
+
 # appinfra
 
 Production-grade Python infrastructure framework for building reliable CLI tools and services:
@@ -26,7 +29,7 @@ builder APIs throughout. The other LLM Works packages build on it.
 
 -   :lucide-compass:{ .lw-card-icon }
 
-    **[Guides](guides/configuration-precedence.md)**
+    **[Guides](guides/configuration-precedence.md)**{ #guides }
 
     Configuration, logging, testing helpers and the development tooling.
 
@@ -38,7 +41,7 @@ builder APIs throughout. The other LLM Works packages build on it.
 
 -   :lucide-braces:{ .lw-card-icon }
 
-    **[API reference](reference/index.md)**
+    **[API reference](reference/index.md)**{ #api-reference }
 
     Every public module, class and function, generated from the source at the release tag.
 

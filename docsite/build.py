@@ -12,6 +12,7 @@ from appinfra.log import Logger
 
 from .config import BuildConfig, NavItem, Package
 from .fetch import PackageFetcher, fetch_nav, fetch_text
+from .links import link_to_repo
 from .navtree import SectionIndex, index_sections, package_nav, page_title, render_section_index
 from .reference import reference_modules, reference_nav, reference_pages
 from .siteconf import render_site_config
@@ -32,7 +33,7 @@ class Build:
         self._cfg = cfg
 
     def fetch(self) -> None:
-        """Clone every package at its tag; download the nav partial and brand stylesheets."""
+        """Clone every package at its ref; download the nav partial and brand stylesheets."""
         fetcher = PackageFetcher(self._lg, self._cfg.site.build_dir)
         for pkg in self._cfg.packages:
             fetcher.fetch(pkg)
@@ -68,7 +69,7 @@ class Build:
     def _stage_package(self, pkg: Package, stager: DocsStager, plan: dict[str, Source]) -> None:
         """Add a package's docs, its reference and its generated section pages to `plan`."""
         checkout = self._cfg.site.build_dir / pkg.name
-        files = stager.files(pkg, checkout)
+        files = link_to_repo(self._lg, pkg, checkout, stager.files(pkg, checkout))
         merge(plan, {f"{pkg.name}/{path}": src for path, src in files.items()}, pkg.name)
         modules = self._reference_modules(pkg)
         if modules is not None:
@@ -83,7 +84,7 @@ class Build:
         nav = self._cfg.nav
         output = nav.output
         output.parent.mkdir(parents=True, exist_ok=True)
-        header = render_header(nav_html, nav.site_origin, nav.docs_origin)
+        header = render_header(nav_html, nav.site_origin)
         output.write_text(header, encoding="utf-8")
         self._lg.info("header rendered", extra={"output": str(output)})
         return output

@@ -27,8 +27,6 @@ nav:
   url: https://www.llm-works.ai/partials/nav.html
   # Root-relative links in the nav are rewritten to this origin
   site_origin: https://www.llm-works.ai
-  # This site's origin: a link to it in the main site's nav becomes the current Docs item
-  docs_origin: https://docs.llm-works.ai
   output: overrides/partials/site-nav.html
   timeout_s: 10
 
@@ -40,8 +38,10 @@ brand:
   nav_css_url: https://www.llm-works.ai/partials/nav.css
   timeout_s: 10
 
-# Each package is fetched at a pinned release tag. `docs_root` is its docs directory in the
-# repo (default: docs). The package's docs are the source and are published as they are; the
+# Packages by name. Each is fetched at its git `ref`: a release tag for the published site; for a
+# preview, a branch or <branch>@<commit> (pushed), set in a gitignored Makefile.local as
+# `serve: export INFRA_PACKAGES_<NAME>_REF := develop@9843ff` (NAME upper-cased, - as _).
+# `docs_root` is its docs directory in the repo (default: docs). The package's docs are the source and are published as they are; the
 # arrangement is the site's. `docs` is the package's tree in the site nav and its allowlist at
 # once: only the files it lists are published, in that order. An entry is a path (titled by the
 # page's heading), {Title: path}, or {Section: [entries]}. No wildcards: a new file must be
@@ -50,18 +50,18 @@ brand:
 # pages/<name>/index.md, and an entry {<name>: <name>/index.md} under Packages in
 # zensical.base.toml.
 packages:
-  - name: appinfra
+  appinfra:
     repo: https://github.com/llm-works/appinfra.git
-    tag: v0.15.0
+    ref: v0.15.0
     docs_root: appinfra/docs
     # Zensical takes a README.md as the folder's index, which is the landing page here
     rename:
       README.md: user-guide.md
-    # Generated from the docstrings at the tag: one page per top-level module of appinfra/
+    # Generated from the docstrings at the ref: one page per top-level module of appinfra/
     reference:
       package: appinfra
-    # Not listed: SECURITY.md, and index.md, the `appinfra docs` CLI's navigation page
-    # (the landing page here is pages/appinfra/index.md)
+    # Not listed: index.md, the `appinfra docs` CLI's navigation page (the landing page here is
+    # pages/appinfra/index.md)
     docs:
       - User guide: README.md
       - Getting started: getting-started.md
@@ -110,5 +110,6 @@ packages:
           - api/subprocess.md
           - api/utilities.md
           - api/errors.md
+      - Security policy: SECURITY.md
       # The docs are published under appinfra's licence (Apache 2.0), which ships with them
       - License: LICENSE

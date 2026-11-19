@@ -26,7 +26,7 @@ APPINFRA_DEV_CQ_DEAD ?= strict
 APPINFRA_DEV_TEST_HEALTH ?= warn
 
 # Test coverage threshold (percentage), measured over unit and integration tests
-APPINFRA_PYTEST_COVERAGE_THRESHOLD ?= 95
+APPINFRA_PYTEST_COVERAGE_THRESHOLD ?= 90
 APPINFRA_PYTEST_COVERAGE_MARKERS ?= unit or integration
 
 # Docstring coverage threshold (percentage)

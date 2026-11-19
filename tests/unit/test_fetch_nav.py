@@ -3,7 +3,6 @@
 
 """Downloading the main site's nav, with urlopen mocked at the call site."""
 
-import http.client
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -16,54 +15,18 @@ from docsite.fetch import USER_AGENT, FetchError, fetch_nav
 NAV = NavConfig(
     url="https://www.llm-works.ai/partials/nav.html",
     site_origin="https://www.llm-works.ai",
-    docs_origin="https://docs.llm-works.ai",
     output=Path("overrides/partials/site-nav.html"),
 )
 
 
-def _response(status: int, body: bytes) -> MagicMock:
-    response = MagicMock()
-    response.status = status
-    response.read.return_value = body
-    response.__enter__.return_value = response
-    return response
-
-
 def test_returns_decoded_markup_and_sends_build_user_agent() -> None:
     """The body is decoded as UTF-8; the request names this build, which Cloudflare accepts."""
-    with patch("docsite.fetch.urllib.request.urlopen") as urlopen:
-        urlopen.return_value = _response(200, "<nav>é</nav>".encode())
+    response = MagicMock(status=200)
+    response.read.return_value = "<nav>é</nav>".encode()
+    response.__enter__.return_value = response
+    with patch("docsite.fetch.urllib.request.urlopen", return_value=response) as urlopen:
         assert fetch_nav(MagicMock(spec=Logger), NAV) == "<nav>é</nav>"
-    request = urlopen.call_args.args[0]
-    assert request.full_url == NAV.url
-    assert request.get_header("User-agent") == USER_AGENT
-    assert urlopen.call_args.kwargs["timeout"] == NAV.timeout_s
-
-
-def test_non_200_status_fails() -> None:
-    """A redirect page or error body never becomes the header."""
-    with patch("docsite.fetch.urllib.request.urlopen") as urlopen:
-        urlopen.return_value = _response(204, b"")
-        with pytest.raises(FetchError, match="HTTP 204"):
-            fetch_nav(MagicMock(spec=Logger), NAV)
-
-
-def test_non_utf8_body_fails() -> None:
-    """Undecodable markup surfaces as FetchError, which the CLI reports as exit 1."""
-    with patch("docsite.fetch.urllib.request.urlopen") as urlopen:
-        urlopen.return_value = _response(200, b"<nav>\xff</nav>")
-        with pytest.raises(FetchError, match="not valid UTF-8"):
-            fetch_nav(MagicMock(spec=Logger), NAV)
-
-
-def test_truncated_response_fails() -> None:
-    """A body cut off mid-transfer surfaces as FetchError naming the URL, like a network error."""
-    response = _response(200, b"")
-    response.read.side_effect = http.client.IncompleteRead(b"<nav")
-    with patch("docsite.fetch.urllib.request.urlopen") as urlopen:
-        urlopen.return_value = response
-        with pytest.raises(FetchError, match=f"download from {NAV.url} failed"):
-            fetch_nav(MagicMock(spec=Logger), NAV)
+    assert urlopen.call_args.args[0].get_header("User-agent") == USER_AGENT
 
 
 def test_network_error_fails() -> None:

@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: MIT
 # SPDX-FileCopyrightText: Copyright 2026 The llm-works-docs Authors
 
-"""Fetch the inputs of a build: each package at its release tag, and the main site's nav and
-brand stylesheets."""
+"""Fetch the inputs of a build: each package at its git ref, and the main site's nav and brand
+stylesheets."""
 
 import http.client
 import shutil
@@ -24,47 +24,39 @@ class FetchError(RuntimeError):
 
 
 class PackageFetcher:
-    """Shallow-clones packages at their pinned tags into the build directory."""
+    """Clones packages at their refs into the build directory."""
 
     def __init__(self, lg: Logger, build_dir: Path) -> None:
         self._lg = lg
         self._build_dir = build_dir
 
     def fetch(self, pkg: Package) -> Path:
-        """Clone `pkg` at its tag into <build_dir>/<name>, replacing an older checkout."""
+        """Clone `pkg` at its ref into <build_dir>/<name>, replacing an older checkout.
+
+        A tag or a branch is a shallow clone of its tip. <branch>@<commit> clones the branch's
+        history, which an abbreviated commit needs to resolve, and checks the commit out; a
+        commit that is not on the branch is not in the clone, and fails.
+        """
         dest = self._build_dir / pkg.name
         if dest.exists():
             shutil.rmtree(dest)
         self._build_dir.mkdir(parents=True, exist_ok=True)
+        branch, _, commit = pkg.ref.partition("@")
+        depth = [] if commit else ["--depth", "1"]
         _git(
-            "-c", "advice.detachedHead=false", "clone", "--quiet", "--depth", "1",
-            "--branch", pkg.tag, "--", pkg.repo, str(dest),
+            "-c", "advice.detachedHead=false", "clone", "--quiet", "--single-branch", *depth,
+            "--branch", branch, "--", pkg.repo, str(dest),
         )  # fmt: skip
-        try:
-            _check_pin(dest, pkg)
-        except FetchError:
-            # A later stage step must not find the rejected checkout.
-            shutil.rmtree(dest)
-            raise
-        self._lg.info("package fetched", extra={"package": pkg.name, "tag": pkg.tag})
+        if commit:
+            _git(
+                "-C", str(dest), "-c", "advice.detachedHead=false",
+                "checkout", "--quiet", commit, "--",
+            )  # fmt: skip
+        head = _git("-C", str(dest), "rev-parse", "--short", "HEAD")
+        self._lg.info(
+            "package fetched", extra={"package": pkg.name, "ref": pkg.ref, "commit": head}
+        )
         return dest
-
-
-def _check_pin(dest: Path, pkg: Package) -> None:
-    """Fail unless HEAD is the tagged commit; ^{commit} peels an annotated tag.
-
-    --branch also accepts a branch, and prefers one that shares the tag's name; only the
-    tagged commit is a valid pin.
-    """
-    error = f"{pkg.name}: checkout is not at tag {pkg.tag}"
-    head = _git("-C", str(dest), "rev-parse", "HEAD")
-    try:
-        tagged = _git("-C", str(dest), "rev-parse", "--verify", f"refs/tags/{pkg.tag}^{{commit}}")
-    except FetchError as e:
-        # A shallow clone of a branch lacks any tag that points at an older commit.
-        raise FetchError(error) from e
-    if head != tagged:
-        raise FetchError(error)
 
 
 def _git(*args: str) -> str:

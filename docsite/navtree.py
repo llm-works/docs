@@ -10,14 +10,13 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
 from .config import NavItem, Package
+from .markdown import prose_flags
 
 # Zensical takes a section's first entry as the section's own page when it is one of these
 INDEX_NAMES = ("index.md", "README.md")
 
 _HEADING = re.compile(r"#\s+(.+?)(?:\s+#+)?\s*$")
 _FRONT_TITLE = re.compile(r"title:\s*(.+)$")
-# A code fence line: its marker, then an info string (opening fences only)
-_FENCE = re.compile(r"\s*(`{3,}|~{3,})(.*)$")
 
 
 class NavTreeError(ValueError):
@@ -106,32 +105,12 @@ def page_title(text: str, path: str) -> str:
 
 
 def _heading(lines: Sequence[str]) -> str | None:
-    """The first level-1 heading outside fenced code.
-
-    A fence closes only on a bare marker of its own character, at least as long as the one that
-    opened it (CommonMark): a ``` line inside a ~~~ block, or inside a ```` block, is code.
-    """
-    fence: str | None = None  # the marker of the block the line is in
-    for line in lines:
-        marker = _FENCE.match(line)
-        if marker and fence is None:
-            fence = marker.group(1)
-            continue
-        if marker and _closes(marker, fence):
-            fence = None
-            continue
-        match = None if fence else _HEADING.match(line)
+    """The first level-1 heading outside fenced code."""
+    for line, prose in zip(lines, prose_flags(lines), strict=True):
+        match = _HEADING.match(line) if prose else None
         if match:
             return match.group(1)
     return None
-
-
-def _closes(marker: re.Match[str], fence: str | None) -> bool:
-    """Whether a fence line closes the block that `fence` opened."""
-    close, rest = marker.group(1), marker.group(2)
-    return (
-        fence is not None and close[0] == fence[0] and len(close) >= len(fence) and not rest.strip()
-    )
 
 
 def _file_title(path: str) -> str:

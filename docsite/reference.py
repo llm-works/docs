@@ -56,7 +56,7 @@ def _index_page(pkg: Package, modules: list[str]) -> str:
     links = "\n".join(f"- [`{m}`]({m.split('.', 1)[1]}.md)" for m in modules)
     return (
         f"# {NAV_TITLE}\n\n"
-        f"Generated from the docstrings and type hints of {pkg.name} {pkg.tag}. Each page covers "
+        f"Generated from the docstrings and type hints of {pkg.name} {pkg.ref}. Each page covers "
         "one top-level module and its submodules.\n\n"
         f"{links}\n"
     )
