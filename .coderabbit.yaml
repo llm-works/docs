@@ -33,8 +33,9 @@ reviews:
         Workflows are the exception to the trusted-inputs scope above: they run on GitHub with
         tokens and publish the site to GitHub Pages. Review them for security: triggers (no
         pull_request_target, no deploy from pull requests), least-privilege permissions per job,
-        persist-credentials: false, pinned actions and dependencies, and untrusted values (PR
-        titles, branch names) reaching run: scripts.
+        persist-credentials: false, and untrusted values (PR titles, branch names) reaching run:
+        scripts. Actions are pinned by version tag, not commit SHA, as .github/zizmor.yml sets
+        on purpose; do not ask for SHA pins.
 
 chat:
   auto_reply: true
