@@ -100,11 +100,13 @@ def test_build_runs_every_step(
     assert (docs / "pkg" / "intro.md").is_file()
     assert (docs / "pkg" / "demo" / "demo.gif").is_file()
     assert not (docs / "pkg" / "known-issues.md").exists()
+    # pkgmod has no subpackages: its API, core.py included, is on the reference's own page
     assert (
-        (docs / "pkg" / "reference" / "core.md")
+        (docs / "pkg" / "reference" / "index.md")
         .read_text(encoding="utf-8")
-        .endswith("::: pkgmod.core\n")
+        .endswith("::: pkgmod\n")
     )
+    assert not (docs / "pkg" / "reference" / "core.md").exists()
     assert (
         (docs / "assets" / "brand" / "tokens.css").read_text(encoding="utf-8").startswith(":root")
     )

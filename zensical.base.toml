@@ -94,12 +94,21 @@ link = "https://www.llm-works.ai/terms/"
 
 # Generated API reference. `python -m docsite config` adds handlers.python.paths: the checkouts of
 # the packages that have a reference.
+[project.plugins.mkdocstrings]
+# Template overrides: each package-level object's heading shows its import line
+custom_templates = "overrides/mkdocstrings"
+
 [project.plugins.mkdocstrings.handlers.python.options]
 # Fences the indented example code that docstrings put under titles like "Example:"
-extensions = ["docsite/docstring_code.py:CodeBlocks"]
+# and lists a package's re-exported names, linked, instead of documenting them a second time
+extensions = ["docsite/docstring_code.py:CodeBlocks", "docsite/reexports.py:Exports"]
 docstring_style = "google"
 members_order = "source"
-show_submodules = true
+# Each package has its own page (docsite/reference.py), so a page holds only its own members
+show_submodules = false
+# Private and special (dunder) members stay out of the reference; merge_init_into_class keeps
+# each class's constructor
+filters = ["!^_"]
 show_root_heading = false
 show_source = false
 show_signature_annotations = true

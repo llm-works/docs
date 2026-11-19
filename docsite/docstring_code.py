@@ -89,12 +89,32 @@ def _is_code(title: str, block: list[str]) -> bool:
 
 
 def _fenced(block: list[str]) -> list[str]:
-    """The block as a fenced code block at its own indentation."""
+    """The block as a fenced code block at its own indentation; Python code is shown as an
+    interactive session, like the examples written as doctests."""
     body = _dedent(block)
+    language = _language(body)
+    if language == "python":
+        body, language = _session(body), "pycon"
     pad = " " * min(_indent(line) for line in block if line.strip())
-    fence = [f"{pad}```{_language(body)}"]
+    fence = [f"{pad}```{language}"]
     fence += [f"{pad}{line}" if line else "" for line in body]
     return [*fence, f"{pad}```"]
+
+
+def _session(body: list[str]) -> list[str]:
+    """Python code as an interactive session: >>> opens each statement and each comment
+    between statements, ... continues a statement over its other lines."""
+    continued: set[int] = set()
+    for node in ast.parse("\n".join(body)).body:
+        first = min([node.lineno, *(d.lineno for d in getattr(node, "decorator_list", []))])
+        continued.update(range(first + 1, (node.end_lineno or node.lineno) + 1))
+    session = []
+    for number, line in enumerate(body, start=1):
+        if number in continued:
+            session.append(f"... {line}".rstrip())
+        else:
+            session.append(f">>> {line}" if line.strip() else "")
+    return session
 
 
 def _indent(line: str) -> int:
@@ -115,7 +135,8 @@ def _is_doctest(lines: list[str]) -> bool:
 
 
 def _language(body: list[str]) -> str:
-    """pycon for a doctest, python if it parses, yaml if every line looks like YAML, else text.
+    """pycon for a doctest, python if it parses (_fenced shows it as a session), yaml if every
+    line looks like YAML, else text.
 
     `key: value` lines also parse as Python annotations; a block of nothing else is YAML.
     """

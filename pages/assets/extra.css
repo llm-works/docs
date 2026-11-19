@@ -131,6 +131,51 @@ html { font-size: 20px; }
   vertical-align: top;
 }
 
+/* --- API reference: an object's import line at the right of its heading --- */
+/* (overrides/mkdocstrings/python/material/_import.html.jinja). On a narrow page it wraps under
+   the name instead, kept inside the heading (flow-root contains the float). */
+.md-typeset .doc-heading {
+  display: flow-root;
+}
+
+.md-typeset .doc-heading .doc-import {
+  position: relative;
+  float: right;
+  margin-left: 1em;
+  /* The code size (below): the copy button's em sizes follow it, as in the signature blocks */
+  font-size: 13.6px;
+  font-weight: normal;
+  line-height: 1.6;
+}
+
+/* A one-line code block: the copy button inside it on the right, as on the signature blocks */
+.md-typeset .doc-import > code {
+  display: inline-block;
+  padding: 0.35em 2.8em 0.35em 0.9em;
+}
+
+.md-typeset .doc-import .md-code__nav {
+  top: 50%;
+  right: 0.25em;
+  transform: translateY(-50%);
+}
+
+/* Copying a session (>>> examples) copies only its code: the theme copies the block's innerText
+   while it carries data-md-copying, so prompts (.gp) and output (.go) hidden then are left out */
+.highlight code[data-md-copying] :is(.gp, .go) {
+  display: none;
+}
+
+/* --- Code: one size everywhere, 13.6px (the theme's .85em of the 16px body text) --- */
+/* The theme sizes code in em, so code in tables and in example boxes (both .64rem text) came out
+   at 10.9px next to 13.6px elsewhere. Code in a heading keeps scaling with it, except the
+   reference's labels and import lines; the symbol badges (c, f, m) keep the theme's size. */
+.md-typeset pre,
+.md-typeset code:not(.doc-symbol):not(:is(h1, h2, h3, h4, h5, h6) code),
+.md-typeset .doc-heading :is(.doc-label code, .doc-import code) {
+  font-size: 13.6px;
+}
+
 /* --- Home lead and actions: the main site's .cta-primary button and .door-link text link --- */
 .md-typeset .lw-lead {
   font-size: 1.05em;
