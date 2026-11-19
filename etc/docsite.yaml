@@ -140,11 +140,13 @@ packages:
       package: llm_saia
     docs:
       - INTRO.md
-      - pydantic.md
-      - custom-verbs.md
-      - backend.md
-      - tool-gates.md
-      - production.md
+      # A section without a page of its own: the site generates guides/index.md, listing them
+      - Guides:
+          - pydantic.md
+          - custom-verbs.md
+          - backend.md
+          - tool-gates.md
+          - production.md
       - demo/demo.gif
 
   llm-kelt:

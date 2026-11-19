@@ -19,7 +19,7 @@ each returning a typed result instead of free text.
 
 -   :lucide-compass:{ .lw-card-icon }
 
-    **[Guides](pydantic.md)**
+    **[Guides](guides/index.md)**
 
     Pydantic schemas, custom verbs, backends, tool gates and production use.
 
