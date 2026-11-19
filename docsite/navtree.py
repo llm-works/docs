@@ -32,8 +32,27 @@ class SectionIndex:
 
 
 def package_nav(pkg: Package) -> list[NavItem]:
-    """The package's docs tree with renames applied, paths relative to the package's directory."""
-    return map_paths(pkg.docs, pkg.site_path)
+    """The package's docs tree with renames applied, paths relative to the package's directory.
+    Files staged under another name than .md, such as an image a page shows, are published but
+    are not pages, so they and sections left empty are not in it."""
+    return _pages_only(map_paths(pkg.docs, pkg.site_path))
+
+
+def _pages_only(items: Sequence[NavItem]) -> list[NavItem]:
+    """The tree without its non-.md paths and the sections that held only those."""
+    out: list[NavItem] = []
+    for item in items:
+        if isinstance(item, str):
+            if item.endswith(".md"):
+                out.append(item)
+            continue
+        ((title, value),) = item.items()
+        if isinstance(value, str):
+            if value.endswith(".md"):
+                out.append(item)
+        elif kept := _pages_only(value):
+            out.append({title: kept})
+    return out
 
 
 def map_paths(items: Sequence[NavItem], fn: Callable[[str], str]) -> list[NavItem]:

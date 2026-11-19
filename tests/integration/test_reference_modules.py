@@ -39,6 +39,24 @@ def test_public_subpackages_at_every_depth(tmp_path: Path) -> None:
     assert reference_modules(tmp_path, ref) == ["mypkg.sub", "mypkg.sub.deep"]
 
 
+def test_excluded_subpackages_are_left_out_with_their_subpackages(tmp_path: Path) -> None:
+    """examples is excluded by default; a nested entry (sub.deep) leaves out only that part."""
+    pkg = _package(tmp_path)
+    for rel in ("examples/__init__.py", "examples/demo/__init__.py"):
+        (pkg / rel).parent.mkdir(parents=True, exist_ok=True)
+        (pkg / rel).write_text("", encoding="utf-8")
+    assert reference_modules(tmp_path, Reference(package="mypkg", source="src")) == [
+        "mypkg.sub",
+        "mypkg.sub.deep",
+    ]
+    ref = Reference(package="mypkg", source="src", exclude=("sub.deep",))
+    assert reference_modules(tmp_path, ref) == [
+        "mypkg.examples",
+        "mypkg.examples.demo",
+        "mypkg.sub",
+    ]
+
+
 def test_missing_package_fails(tmp_path: Path) -> None:
     """The reference config must point at a package directory."""
     with pytest.raises(ReferenceSourceError, match="not a package"):

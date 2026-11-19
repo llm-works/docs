@@ -116,16 +116,10 @@ def test_build_runs_every_step(
     # The staged directory, relative to zensical.toml
     assert config["project"]["docs_dir"] == "docs"
     entry = config["project"]["nav"][1]["Packages"][1]["pkg"]
-    assert entry[:3] == [
-        "pkg/index.md",
-        {"Introduction": "pkg/intro.md"},
-        {"Demo": ["pkg/demo/index.md", "pkg/demo/demo.gif"]},
-    ]
-    assert entry[3]["API reference"][0] == "pkg/reference/index.md"
-    # The Demo section has no page of its own: one is generated, listing its entries
-    assert (docs / "pkg" / "demo" / "index.md").read_text(encoding="utf-8") == (
-        "# Demo\n\n- [Demo](demo.gif)\n"
-    )
+    # The Demo section holds only an image: published above, but no pages, so not in the nav
+    assert entry[:2] == ["pkg/index.md", {"Introduction": "pkg/intro.md"}]
+    assert entry[2]["API reference"][0] == "pkg/reference/index.md"
+    assert not (docs / "pkg" / "demo" / "index.md").exists()
     python = config["project"]["plugins"]["mkdocstrings"]["handlers"]["python"]
     assert python["paths"] == [(tmp_path / "build" / "pkg").as_posix()]
 

@@ -104,7 +104,11 @@ custom_templates = "overrides/mkdocstrings"
 # and lists a package's re-exported names, linked, instead of documenting them a second time
 extensions = ["docsite/docstring_code.py:CodeBlocks", "docsite/reexports.py:Exports"]
 docstring_style = "google"
-members_order = "source"
+# Members by kind (attributes, classes, functions; in a class: attributes, then methods), each
+# kind alphabetical. On a package page, source order would be the order of __init__'s imports.
+# The Exports table (docsite/reexports.py) is alphabetical too.
+group_by_category = true
+members_order = "alphabetical"
 # Each package has its own page (docsite/reference.py), so a page holds only its own members
 show_submodules = false
 # Private and special (dunder) members stay out of the reference; merge_init_into_class keeps

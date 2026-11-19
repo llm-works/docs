@@ -30,18 +30,20 @@ def reference_modules(checkout: Path, ref: Reference) -> list[str]:
     root = checkout / ref.source / ref.package
     if not (root / "__init__.py").is_file() or root.is_symlink():
         raise ReferenceSourceError(f"{root} is not a package directory")
-    return _walk(root, ref.package)
+    return _walk(root, ref.package, {f"{ref.package}.{name}" for name in ref.exclude})
 
 
-def _walk(folder: Path, dotted: str) -> list[str]:
-    """The public subpackages under `folder`, the package `dotted`, recursively."""
+def _walk(folder: Path, dotted: str, exclude: set[str]) -> list[str]:
+    """The public subpackages under `folder`, the package `dotted`, recursively; an excluded
+    one is skipped with everything under it."""
     packages = []
     for entry in sorted(folder.iterdir()):
-        if entry.name.startswith("_") or entry.is_symlink():
+        name = f"{dotted}.{entry.name}"
+        if entry.name.startswith("_") or entry.is_symlink() or name in exclude:
             continue
         if (entry / "__init__.py").is_file():
-            packages.append(f"{dotted}.{entry.name}")
-            packages += _walk(entry, f"{dotted}.{entry.name}")
+            packages.append(name)
+            packages += _walk(entry, name, exclude)
     return packages
 
 
