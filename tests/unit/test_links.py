@@ -37,6 +37,8 @@ def _rewrite(text: str) -> tuple[str, int]:
         ("![d](../../../examples/)", f"![d]({BASE}/examples)"),
         # An image file: the raw file, not GitHub's page for it
         ("![d](../../../examples/demo.png)", f"![d]({BASE}/examples/demo.png?raw=true)"),
+        # ... joined to a query the link has
+        ("![d](../../../examples/demo.png?v=2)", f"![d]({BASE}/examples/demo.png?raw=true&v=2)"),
         # Reference definition
         ("[readme]: ../../../README.md", f"[readme]: {BASE}/README.md"),
     ],

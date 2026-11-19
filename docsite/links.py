@@ -92,9 +92,11 @@ class RepoLinks:
         inside = path == self.docs_root or path.startswith(self.docs_root + "/")
         if inside or path.startswith("../") or path == ".." or path not in self.paths:
             return None
-        # A blob URL is GitHub's page for the file; ?raw=true redirects to the image itself
-        raw_query = "?raw=true" if path.lower().endswith(_IMAGES) else ""
-        return f"{self.base}/{quote(path)}{raw_query}{raw[cut:]}"
+        rest = raw[cut:]
+        if path.lower().endswith(_IMAGES):
+            # A blob URL is GitHub's page for the file; raw=true redirects to the image itself
+            rest = "?raw=true" + ("&" + rest[1:] if rest.startswith("?") else rest)
+        return f"{self.base}/{quote(path)}{rest}"
 
 
 def link_to_repo(
