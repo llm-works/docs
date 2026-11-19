@@ -16,6 +16,26 @@ reviews:
   auto_review:
     enabled: true
     drafts: false
+  path_instructions:
+    - path: "**"
+      instructions: |
+        Outside .github/workflows/ (see the next entry): build tooling for a static docs site. It runs on a developer machine or in this
+        repo's CI, never as a service, and has no consumers outside this repo. Its inputs are
+        trusted (see SECURITY.md): etc/docsite.yaml, INFRA_* environment overrides, and the
+        llm-works package repositories it fetches. Do not flag missing validation of those
+        inputs (paths, names, refs, symlinks, renames), and do not ask for backward
+        compatibility of the config or CLI. Report bugs that break the build or the published
+        site for the content it actually publishes; skip Markdown edge cases that do not occur
+        in the package docs. Keep suggestions proportionate: no new validation layers or tests
+        for hypothetical inputs.
+    - path: ".github/workflows/**"
+      instructions: |
+        Workflows are the exception to the trusted-inputs scope above: they run on GitHub with
+        tokens and publish the site to GitHub Pages. Review them for security: triggers (no
+        pull_request_target, no deploy from pull requests), least-privilege permissions per job,
+        persist-credentials: false, and untrusted values (PR titles, branch names) reaching run:
+        scripts. Actions are pinned by version tag, not commit SHA, as .github/zizmor.yml sets
+        on purpose; do not ask for SHA pins.
 
 chat:
   auto_reply: true

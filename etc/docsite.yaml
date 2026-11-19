@@ -57,6 +57,8 @@ packages:
     # Zensical takes a README.md as the folder's index, which is the landing page here
     rename:
       README.md: user-guide.md
+      # A plain-text file renamed to .md is published as a page, its text in a code block
+      LICENSE: license.md
     # Generated from the docstrings at the ref: one page per top-level module of appinfra/
     reference:
       package: appinfra

@@ -11,7 +11,7 @@ import pytest
 from appinfra.log import Logger
 
 from docsite.config import Package
-from docsite.stage import DocsStager, Source, StageError, merge, sync_tree
+from docsite.stage import DocsStager, Source, StageError, merge, sync_tree, text_pages
 
 
 def _checkout(root: Path, files: dict[str, str], docs_root: str = "docs") -> Path:
@@ -43,6 +43,15 @@ def test_missing_allowlisted_file_fails(lg: Logger, tmp_path: Path) -> None:
     checkout = _checkout(tmp_path / "co", {"INTRO.md": "i"})
     with pytest.raises(StageError, match="gone.md"):
         DocsStager(lg).files(_package("INTRO.md", "gone.md"), checkout)
+
+
+def test_plain_text_file_renamed_to_markdown_becomes_a_page(tmp_path: Path) -> None:
+    """LICENSE staged as license.md shows its text as it is, in a code block under a title."""
+    (tmp_path / "LICENSE").write_text("Apache License\n  1. Definitions.\n", encoding="utf-8")
+    (tmp_path / "a.md").write_text("# A\n", encoding="utf-8")
+    pages = text_pages({"license.md": tmp_path / "LICENSE", "a.md": tmp_path / "a.md"})
+    assert pages["license.md"] == "# License\n\n```text\nApache License\n  1. Definitions.\n```\n"
+    assert pages["a.md"] == tmp_path / "a.md"
 
 
 def test_merge_refuses_a_taken_path() -> None:

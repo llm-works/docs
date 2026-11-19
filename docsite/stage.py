@@ -5,7 +5,7 @@
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from appinfra.log import Logger
 
@@ -57,6 +57,23 @@ class DocsStager:
                 extra={"package": pkg.name, "files": list(sel.unlisted)},
             )
         return {pkg.site_path(path): source / path for path in sel.copy}
+
+
+def text_pages(files: Mapping[str, Source]) -> dict[str, Source]:
+    """`files`, with each plain-text file staged under a .md name (a rename, e.g. LICENSE to
+    license.md) made a page: its name as the title, its text unchanged in a code block."""
+    pages: dict[str, Source] = {}
+    for path, src in files.items():
+        if path.endswith(".md") and isinstance(src, Path) and src.suffix != ".md":
+            title = PurePosixPath(path).stem.replace("-", " ").capitalize()
+            src = text_page(title, src.read_text(encoding="utf-8"))
+        pages[path] = src
+    return pages
+
+
+def text_page(title: str, text: str) -> str:
+    """Markdown for a page that shows `text` as it is, under the heading `title`."""
+    return f"# {title}\n\n```text\n{text.rstrip()}\n```\n"
 
 
 def merge(plan: dict[str, Source], files: Mapping[str, Source], owner: str) -> None:

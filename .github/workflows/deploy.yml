@@ -1,0 +1,73 @@
+name: Deploy
+
+# Builds the site from the committed config and publishes it to GitHub Pages. A push to main
+# deploys; a manual run builds the chosen branch and deploys only when that branch is main.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One run per ref at a time; a running deploy finishes before the next starts. Per ref, so a
+# manual build of another branch cannot replace a main run waiting in the queue.
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # No dependency cache: a cache shared with other workflows could feed this publishing build
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # appinfra is not on PyPI; a release tag here, never a branch
+          python -m pip install "appinfra[validation] @ git+https://github.com/llm-works/appinfra.git@v0.15.0"
+          # editable: the build reads etc/docsite.yaml relative to the docsite sources
+          python -m pip install -e .
+
+      # The committed etc/docsite.yaml only: each package at its release tag, no INFRA_* overrides
+      - name: Build the site
+        run: |
+          python -m docsite build
+          zensical build --clean
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+  deploy:
+    name: Deploy
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

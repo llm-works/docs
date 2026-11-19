@@ -39,6 +39,11 @@ dependencies = [
 dev = [
     # check: ruff, mypy, pytest, pytest-cov, pytest-xdist and the make check tooling
     "appinfra[check]>=0.14.0",
+    # the browser smoke test of the built site (tests/e2e); its browser is installed separately
+    "pytest-playwright>=0.7",
+    # gives pytest-playwright its base_url fixture; without it the plugin's own fallback warns
+    # under pytest 9 (session fixture defined as an instance method)
+    "pytest-base-url>=2.1",
 ]
 
 [project.urls]
