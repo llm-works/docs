@@ -17,7 +17,7 @@ from .navtree import SectionIndex, index_sections, package_nav, page_title, rend
 from .reference import reference_modules, reference_nav, reference_pages
 from .siteconf import render_site_config
 from .sitenav import render_header
-from .stage import DocsStager, Source, StageError, merge, sync_tree
+from .stage import DocsStager, Source, StageError, merge, sync_tree, text_pages
 
 NAV_SOURCE = "nav.html"
 # Where fetch saves the brand stylesheets in build_dir, and where stage puts them in docs_dir
@@ -69,7 +69,7 @@ class Build:
     def _stage_package(self, pkg: Package, stager: DocsStager, plan: dict[str, Source]) -> None:
         """Add a package's docs, its reference and its generated section pages to `plan`."""
         checkout = self._cfg.site.build_dir / pkg.name
-        files = link_to_repo(self._lg, pkg, checkout, stager.files(pkg, checkout))
+        files = text_pages(link_to_repo(self._lg, pkg, checkout, stager.files(pkg, checkout)))
         merge(plan, {f"{pkg.name}/{path}": src for path, src in files.items()}, pkg.name)
         modules = self._reference_modules(pkg)
         if modules is not None:
